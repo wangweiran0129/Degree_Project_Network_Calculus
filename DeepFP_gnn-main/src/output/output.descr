@@ -1,0 +1,17 @@
+
+¹
+messages.protonetcal"c
+Network
+id (Rid&
+server (2.netcal.ServerRserver 
+flow (2.netcal.FlowRflow"F
+Server
+id (Rid
+rate (Rrate
+latency (Rlatency"j
+Flow
+id (Rid
+rate (Rrate
+burst (Rburst
+start (Rstart
+sink (Rsinkbproto3
