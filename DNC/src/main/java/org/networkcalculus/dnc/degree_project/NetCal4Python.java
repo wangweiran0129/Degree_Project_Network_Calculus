@@ -14,9 +14,6 @@ import org.networkcalculus.dnc.network.server_graph.Server;
 import org.networkcalculus.dnc.network.server_graph.ServerGraph;
 import org.networkcalculus.dnc.tandem.analyses.FIFOTandemAnalysis;
 import org.networkcalculus.dnc.tandem.analyses.PmooAnalysis;
-import org.networkcalculus.dnc.tandem.analyses.SeparateFlowAnalysis;
-import org.networkcalculus.dnc.tandem.analyses.TandemMatchingAnalysis;
-import org.networkcalculus.dnc.tandem.analyses.TotalFlowAnalysis;
 import org.networkcalculus.num.Num;
 
 public class NetCal4Python {
@@ -25,8 +22,10 @@ public class NetCal4Python {
 
     }
 
-    public double[] DelayBoundCalculation(double[] server_rate, double[] server_latency, double[] flow_rate,
+    public double[] delayBoundCalculation(double[] server_rate, double[] server_latency, double[] flow_rate,
             double[] flow_burst, int[] flow_src, int[] flow_dest, int[] foi_id) {
+
+        System.out.println("hello ?");
 
         /*
          * This method will calculate the delay bounds based on the network features and
