@@ -12,7 +12,6 @@ import org.networkcalculus.dnc.curves.ServiceCurve;
 import org.networkcalculus.dnc.network.server_graph.Flow;
 import org.networkcalculus.dnc.network.server_graph.Server;
 import org.networkcalculus.dnc.network.server_graph.ServerGraph;
-import org.networkcalculus.dnc.tandem.analyses.FIFOTandemAnalysis;
 import org.networkcalculus.dnc.tandem.analyses.PmooAnalysis;
 import org.networkcalculus.num.Num;
 
@@ -200,6 +199,10 @@ public class NetCal4Python {
         System.out.println("# flows : " + flow_number);
         System.out.println();
 
+        for (int i = 0; i < flow_number; i++) {
+            System.out.println("flow src : " + flow_src[i] + ", flow dest : " + flow_dest[i]);
+        }
+
         ServerGraph sg = new ServerGraph();
         AnalysisConfig configuration = new AnalysisConfig();
         configuration.enforceMaxSC(AnalysisConfig.MaxScEnforcement.GLOBALLY_ON);
@@ -233,6 +236,8 @@ public class NetCal4Python {
             server_order = "decreasing";
         }
         if (order_increase_counter != flow_number && order_decrease_counter != flow_number) {
+            System.out.println("order increase counter : " + order_increase_counter);
+            System.out.println("order decrease counter : " + order_decrease_counter);
             System.out.println("Chaotic Server Connections. Delay Bounds Cannot Be Calculated");
             System.exit(0);
         }
@@ -305,6 +310,8 @@ public class NetCal4Python {
             System.out.println("PMOO Analysis Failed");
             e.printStackTrace();
         }
+
+        System.out.println("");
 
         return pmoo_delay_bound;
 
