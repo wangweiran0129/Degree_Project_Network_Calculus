@@ -1,6 +1,7 @@
 # This code is written by Weiran Wang
 # For any questions, please contact the author of this code at (weiran.wang@epfl.ch)
 
+from gc import collect
 import random
 import collections
 from pbzlib import write_pbz, open_pbz
@@ -25,9 +26,12 @@ def large_network(num_topo):
     objs = []
 
     for topo_id in range(num_topo):
-        num_server = random.randint(2, 8)
-        num_flow = random.randint(10, 20)
-        print("# server : ", num_server)
+
+        print("topo id : ", topo_id)
+
+        num_server = random.randint(30, 50)
+        num_flow = random.randint(200, 300)
+        print("initial # server : ", num_server)
         print("# flow : ", num_flow)
 
         # To simplify the calculation in the adverseari attack process
@@ -41,7 +45,7 @@ def large_network(num_topo):
         for i in range(num_server):
             server = objs[topo_id].server.add()
             server.id = i
-            server.rate = random.uniform(0.05, 1)
+            server.rate = random.uniform(0.01, 1)
             server.latency = random.uniform(0.01, 1)
         
         # Add flow information
@@ -63,21 +67,54 @@ def large_network(num_topo):
                     flow.path.append(flow_path)
 
         # Create a list to find which flows are on each server
-        flows_in_servers = collections.defaultdict(list)
-        for server in objs[topo_id].server:
-            for flow in objs[topo_id].flow:
-                if server.id in flow.path:
-                    flows_in_servers[server.id].append(flow.id)
-        print("flows in servers : ", flows_in_servers)
+        flows_in_servers_temp = collections.defaultdict(list)
+        for s in objs[topo_id].server:
+            for f in objs[topo_id].flow:
+                if s.id in f.path:
+                    flows_in_servers_temp[s.id].append(f.id)
 
-        # Modify the server rates to guarantee the flows on each server
-        # Are within the server's capacity
+        # Find the first server where there is a flow passing by
+        first_useful_server = 0
+        for s in objs[topo_id].server:
+            if len(flows_in_servers_temp[s.id]) != 0:
+                first_useful_server = s.id
+                break
+
+        # Delete the server where there are no flows passing by
+        useless_server = []
+        for s in objs[topo_id].server:
+            if len(flows_in_servers_temp[s.id]) == 0:
+                useless_server.append(s.id)
+        useless_server.reverse()
+        for sid in useless_server:
+            del objs[topo_id].server[sid]
+        num_server = num_server - len(useless_server)
+
+        print("updated # server : ", num_server)
+
+        # Re-number the server id
+        for s in objs[topo_id].server:
+            s.id = s.id - first_useful_server
+        
+        # Update the flow path
+        for f in objs[topo_id].flow:
+            for p in range(len(f.path)):
+                f.path[p] = f.path[p] - first_useful_server
+        
+        # Update the flows_in_servers
+        flows_in_servers = collections.defaultdict(list)
+        for s in objs[topo_id].server:
+            for f in objs[topo_id].flow:
+                if s.id in f.path:
+                    flows_in_servers[s.id].append(f.id)
+
+        # Modify the server rates to guarantee the flows on each server are within the server's capacity
         for sid in flows_in_servers:
             aggregated_flow_rate = 0
             for fid in flows_in_servers[sid]:
                 aggregated_flow_rate = aggregated_flow_rate + objs[topo_id].flow[fid].rate
             if aggregated_flow_rate >= objs[topo_id].server[sid].rate:
-                objs[topo_id].server[sid].rate = aggregated_flow_rate + 0.0001
+                objs[topo_id].server[sid].rate = aggregated_flow_rate + 0.01
 
         # Collect the network features which will pass to the NetCal4Python.java
         server_rate_java = gateway.new_array(double_class, num_server)
@@ -106,13 +143,13 @@ def large_network(num_topo):
 
         # Add the explore combination (potential flow prolongation)
         foi_sink_server = objs[topo_id].flow[foi].path[-1]
-        num_explore_combination = random.randint(1, round(num_flow / 5))
+        num_explore_combination = random.randint(round(num_flow/30), round(num_flow/20))
         print("there are ", num_explore_combination, " explore combinations in this topology")
 
         for ex_com_index in range(num_explore_combination):
             print("explored combination index : ", ex_com_index)
             objs[topo_id].flow[foi].pmoofp.explored_combination.add()
-            flow_to_be_prolonged = random.sample(range(1, num_flow), random.randint(1, round(num_flow / 2)))
+            flow_to_be_prolonged = random.sample(range(0, num_flow-1), random.randint(round(num_flow/25), round(num_flow/10)))
             flow_to_be_prolonged.sort()
 
             # Make sure the foi is not in the flow_to_be_prolonged list
@@ -162,7 +199,7 @@ def large_network(num_topo):
 
 
 def main():
-    large_network(2)
+    large_network(50)
 
 
 if __name__ == "__main__":

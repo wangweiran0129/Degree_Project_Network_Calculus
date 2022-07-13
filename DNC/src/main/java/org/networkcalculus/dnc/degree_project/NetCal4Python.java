@@ -199,10 +199,6 @@ public class NetCal4Python {
         System.out.println("# flows : " + flow_number);
         System.out.println();
 
-        for (int i = 0; i < flow_number; i++) {
-            System.out.println("flow src : " + flow_src[i] + ", flow dest : " + flow_dest[i]);
-        }
-
         ServerGraph sg = new ServerGraph();
         AnalysisConfig configuration = new AnalysisConfig();
         configuration.enforceMaxSC(AnalysisConfig.MaxScEnforcement.GLOBALLY_ON);
