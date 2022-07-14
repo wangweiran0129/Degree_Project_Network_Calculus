@@ -1,7 +1,6 @@
 # This code is written by Weiran Wang
 # For any questions, please contact the author of this code at (weiran.wang@epfl.ch)
 
-from gc import collect
 import random
 import collections
 from pbzlib import write_pbz, open_pbz
@@ -29,8 +28,8 @@ def large_network(num_topo):
 
         print("topo id : ", topo_id)
 
-        num_server = random.randint(40, 50)
-        num_flow = random.randint(200, 300)
+        num_server = random.randint(30, 40)
+        num_flow = random.randint(100, 200)
         print("initial # server : ", num_server)
         print("# flow : ", num_flow)
 
@@ -158,18 +157,6 @@ def large_network(num_topo):
             objs[topo_id].flow[foi].pmoofp.explored_combination.add()
             flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(round(num_flow/25), round(num_flow/10)))
             flow_to_be_prolonged.sort()
-
-            # Make sure the foi is not in the flow_to_be_prolonged list
-            if foi in flow_to_be_prolonged:
-                flow_to_be_prolonged.remove(foi)
-            
-            # Make sure the id of the destination/sink server of the flow to be prolonged is not bigger than the foi's sink/destination server
-            redundant_flow = []
-            for fid in flow_to_be_prolonged:
-                if objs[topo_id].flow[fid].path[-1] > foi_sink_server:
-                    redundant_flow.append(fid)
-            for fid in redundant_flow:
-                flow_to_be_prolonged.remove(fid)
 
             # Backup the original flow destination servers
             flow_prolonged_dest_java = gateway.new_array(int_class, num_flow)
