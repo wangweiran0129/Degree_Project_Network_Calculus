@@ -29,7 +29,7 @@ def large_network(num_topo):
 
         print("topo id : ", topo_id)
 
-        num_server = random.randint(30, 50)
+        num_server = random.randint(40, 50)
         num_flow = random.randint(200, 300)
         print("initial # server : ", num_server)
         print("# flow : ", num_flow)
@@ -141,15 +141,22 @@ def large_network(num_topo):
         print("pmoo : ", original_delay_bound)
         objs[topo_id].flow[foi].pmoo.delay_bound = original_delay_bound
 
-        # Add the explore combination (potential flow prolongation)
+        # Find the possible flows which can be prolonged
+        # i.e., the flow sink/destination server id < foi sink/destination server id
         foi_sink_server = objs[topo_id].flow[foi].path[-1]
+        possbile_flow_to_be_prolonged = []
+        for f in objs[topo_id].flow:
+            if f.path[-1] < foi_sink_server:
+                possbile_flow_to_be_prolonged.append(f.id)
+
+        # Add the explore combination (potential flow prolongation)
         num_explore_combination = random.randint(round(num_flow/30), round(num_flow/20))
         print("there are ", num_explore_combination, " explore combinations in this topology")
 
         for ex_com_index in range(num_explore_combination):
             print("explored combination index : ", ex_com_index)
             objs[topo_id].flow[foi].pmoofp.explored_combination.add()
-            flow_to_be_prolonged = random.sample(range(0, num_flow-1), random.randint(round(num_flow/25), round(num_flow/10)))
+            flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(round(num_flow/25), round(num_flow/10)))
             flow_to_be_prolonged.sort()
 
             # Make sure the foi is not in the flow_to_be_prolonged list
@@ -163,9 +170,6 @@ def large_network(num_topo):
                     redundant_flow.append(fid)
             for fid in redundant_flow:
                 flow_to_be_prolonged.remove(fid)
-
-            if len(flow_to_be_prolonged) == 0:
-                continue
 
             # Backup the original flow destination servers
             flow_prolonged_dest_java = gateway.new_array(int_class, num_flow)
@@ -191,6 +195,7 @@ def large_network(num_topo):
                 min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound
         print("min pmoofp delay bound : ", min_fp_delay_bound)
         objs[topo_id].flow[foi].pmoofp.delay_bound = min_fp_delay_bound
+        print("")
 
         # Write the network topology into the pbz file
         with write_pbz("dataset-attack-large.pbz", "large_network/large_network.descr") as w:
