@@ -3,10 +3,17 @@
 
 import random
 import collections
+import os
+from threading import Thread
 from tqdm import tqdm
 from pbzlib import write_pbz
 from large_network.large_network_pb2 import *
 from py4j.java_gateway import JavaGateway
+
+def setup_jar():
+    print("Is the jar file started?")
+    os.system("java -jar /Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/NetCal.jar")
+
 
 def large_network(num_topo):
     """
@@ -156,13 +163,13 @@ def large_network(num_topo):
         print("# possible flows ", length_possible_flow_to_be_prolonged)
 
         # Add the explore combination (potential flow prolongation)
-        num_explore_combination = random.randint(num_flow, num_flow*2)
+        num_explore_combination = random.randint(num_flow, num_flow*5)
+        real_num_explore_combination = 0
         print("# explored combination ", num_explore_combination, "\n")
 
         for ex_com_index in tqdm(range(num_explore_combination)):
-            # print("explored combination index : ", ex_com_index)
-            objs[topo_id].flow[foi].pmoofp.explored_combination.add()
-            flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(round(length_possible_flow_to_be_prolonged/4), round(length_possible_flow_to_be_prolonged/2)))
+
+            flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(round(length_possible_flow_to_be_prolonged/10), length_possible_flow_to_be_prolonged))
             flow_to_be_prolonged.sort()
 
             # Backup the original flow destination servers
@@ -174,23 +181,30 @@ def large_network(num_topo):
             for fid in flow_to_be_prolonged:
                 original_sink_server = objs[topo_id].flow[fid].path[-1]
                 prolonged_sink_server = random.randint(original_sink_server, foi_sink_server)
-                objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_index].flows_prolongation[fid] = prolonged_sink_server
                 flow_prolonged_dest_java[fid] = prolonged_sink_server
             
             # Compute the delay bound after the flow prolongation
             delay_bound_after_prolongation = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_prolonged_dest_java, foi)
-            # print("delay bound after flow prolongation ", ex_com_index, " : ", delay_bound_after_prolongation)
-            objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_index].delay_bound = delay_bound_after_prolongation
+            
+            # To reduce the size of dataset, only the tigher delay bounds are recorded
+            if delay_bound_after_prolongation <= original_delay_bound:
+                print("BINGO! One tigher delay bound is found!")
+                real_num_explore_combination = real_num_explore_combination + 1
+                objs[topo_id].flow[foi].pmoofp.explored_combination.add()
+                for fid in flow_to_be_prolonged:
+                    objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_index].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
+                objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_index].delay_bound = delay_bound_after_prolongation
+        
+        print("real # explored combination : ", real_num_explore_combination)
         
         # The pmoofp.delay_bound is the tightest value among all the explored combinations
-        min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[0].delay_bound
-        for ex_com_idx in range(num_explore_combination):
-            if objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound < min_fp_delay_bound:
-                min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound
-        print("min pmoofp delay bound : ", min_fp_delay_bound)
-        objs[topo_id].flow[foi].pmoofp.delay_bound = min_fp_delay_bound
-        if min_fp_delay_bound <= original_delay_bound:
-            print("YES! YOU FOUND THE NEW CONTINENT")
+        if real_num_explore_combination != 0:
+            min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[0].delay_bound
+            for ex_com_idx in range(real_num_explore_combination):
+                if objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound < min_fp_delay_bound:
+                    min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound
+            print("min pmoofp delay bound : ", min_fp_delay_bound)
+            objs[topo_id].flow[foi].pmoofp.delay_bound = min_fp_delay_bound
         print("")
 
         # Write the network topology into the pbz file
