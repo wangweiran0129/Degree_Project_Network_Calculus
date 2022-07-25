@@ -10,10 +10,6 @@ from pbzlib import write_pbz
 from large_network.large_network_pb2 import *
 from py4j.java_gateway import JavaGateway
 
-def setup_jar():
-    print("Is the jar file started?")
-    os.system("java -jar /Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/NetCal.jar")
-
 
 def large_network(num_topo):
     """
@@ -36,8 +32,8 @@ def large_network(num_topo):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(40, 50)
-        num_flow = random.randint(400, 500)
+        num_server = random.randint(20, 40)
+        num_flow = random.randint(300, 400)
 
         # To simplify the calculation in the adverseari attack process
         # There will be only one foi in each topology
@@ -163,11 +159,11 @@ def large_network(num_topo):
         print("# possible flows ", length_possible_flow_to_be_prolonged)
 
         # Add the explore combination (potential flow prolongation)
-        num_explore_combination = random.randint(num_flow, num_flow*5)
+        num_explore_combination = random.randint(num_flow*100, num_flow*200)
         real_num_explore_combination = 0
         print("# explored combination ", num_explore_combination, "\n")
 
-        for ex_com_index in tqdm(range(num_explore_combination)):
+        for i in tqdm(range(num_explore_combination)):
 
             flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(round(length_possible_flow_to_be_prolonged/10), length_possible_flow_to_be_prolonged))
             flow_to_be_prolonged.sort()
@@ -189,11 +185,11 @@ def large_network(num_topo):
             # To reduce the size of dataset, only the tigher delay bounds are recorded
             if delay_bound_after_prolongation <= original_delay_bound:
                 print("BINGO! One tigher delay bound is found!")
-                real_num_explore_combination = real_num_explore_combination + 1
                 objs[topo_id].flow[foi].pmoofp.explored_combination.add()
                 for fid in flow_to_be_prolonged:
-                    objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_index].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
-                objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_index].delay_bound = delay_bound_after_prolongation
+                    objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
+                objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].delay_bound = delay_bound_after_prolongation
+                real_num_explore_combination = real_num_explore_combination + 1
         
         print("real # explored combination : ", real_num_explore_combination)
         
