@@ -48,8 +48,6 @@ public class NetCal4Python {
 
         int server_number = server_rate.length;
         int flow_number = flow_rate.length;
-        System.out.println("# servers : " + server_number);
-        System.out.println("# flows : " + flow_number);
         System.out.println();
 
         ServerGraph sg = new ServerGraph();
@@ -89,7 +87,6 @@ public class NetCal4Python {
             System.exit(0);
         }
 
-        System.out.println("The order of this topology : " + server_order);
         System.out.println();
 
         // Connect the servers
@@ -142,18 +139,12 @@ public class NetCal4Python {
             // Define the flow of interest
             for (int i = 0; i < foi_id.length; i++) {
                 Flow flow_of_interest = sg.getFlow(foi_id[i]);
-                System.out.println("flow of interest : " + flow_of_interest);
-                System.out.println();
-
                 // Analyze the network
-                System.out.println("--- PMOO Analysis ---");
                 System.out.println();
                 PmooAnalysis pmoo = new PmooAnalysis(sg, configuration);
                 pmoo.performAnalysis(flow_of_interest);
                 Num pmoo_db = pmoo.getDelayBound();
                 pmoo_delay_bound[i] = pmoo_db.doubleValue();
-                System.out.println("delay bound Num : " + pmoo_db);
-                System.out.println("delay bound double : " + pmoo_delay_bound[i]);
             }
 
         } catch (Exception e) {
@@ -195,8 +186,6 @@ public class NetCal4Python {
 
         int server_number = server_rate.length;
         int flow_number = flow_rate.length;
-        System.out.println("# servers : " + server_number);
-        System.out.println("# flows : " + flow_number);
         System.out.println();
 
         ServerGraph sg = new ServerGraph();
@@ -232,13 +221,10 @@ public class NetCal4Python {
             server_order = "decreasing";
         }
         if (order_increase_counter != flow_number && order_decrease_counter != flow_number) {
-            System.out.println("order increase counter : " + order_increase_counter);
-            System.out.println("order decrease counter : " + order_decrease_counter);
             System.out.println("Chaotic Server Connections. Delay Bounds Cannot Be Calculated");
             System.exit(0);
         }
 
-        System.out.println("The order of this topology : " + server_order);
         System.out.println();
 
         // Connect the servers
@@ -290,18 +276,12 @@ public class NetCal4Python {
         try {
             // Define the flow of interest
             Flow flow_of_interest = sg.getFlow(foi_id);
-            System.out.println("flow of interest : " + flow_of_interest);
-            System.out.println();
-
             // Analyze the network
-            System.out.println("--- PMOO Analysis ---");
             System.out.println();
             PmooAnalysis pmoo = new PmooAnalysis(sg, configuration);
             pmoo.performAnalysis(flow_of_interest);
             Num pmoo_db = pmoo.getDelayBound();
             pmoo_delay_bound = pmoo_db.doubleValue();
-            System.out.println("delay bound Num : " + pmoo_db);
-            System.out.println("delay bound double : " + pmoo_delay_bound);
         } catch (Exception e) {
             System.out.println("PMOO Analysis Failed");
             e.printStackTrace();
