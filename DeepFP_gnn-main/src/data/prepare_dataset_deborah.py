@@ -9,7 +9,7 @@ import argparse
 
 
 # The inputs are the graph G, unique identifiers for each node, prolongation nodes if its for training
-def graph2torch(G, node_ids):
+def graph2torch_deborah(G, node_ids):
     """
 
     :param G: networkx graph object of the network with the prolongations
@@ -124,7 +124,7 @@ def prepare_dataset_deborah(path, train, to_pickle=True):
 
                 flows_that_can_be_prolonged = set(pro_dict.keys())
 
-                grph = graph2torch(G_f, node_ids=node_ids)
+                grph = graph2torch_deborah(G_f, node_ids=node_ids)
 
                 # Append the created graph to the dataset
                 graphs.append(grph)
