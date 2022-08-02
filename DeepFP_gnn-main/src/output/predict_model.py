@@ -1,9 +1,10 @@
 import sys
 sys.path.insert(0, "../src/")
 from data.graph_transformer import *
-from data.prepare_dataset import *
+from data.prepare_dataset_pmoo import *
+from data.prepare_dataset_deborah import *
 from model.train_model import *
-from .output_pb2 import *
+from output.output_pb2 import *
 from pbzlib import write_pbz, open_pbz
 
 
@@ -24,7 +25,7 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
     # prolong the graph with respect to the foi
     G_f, pro_dict, node_ids = prolong_graph(G, foi_id, flows_path)
 
-    graph = graph2torch(G_f, node_ids=node_ids)
+    graph = graph2torch_pmoo(G_f, node_ids=node_ids)
 
     adj = prepare_adjacency_matrix(graph)
 
@@ -62,7 +63,7 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
 
     write_network(network, start_sink_dict, output_file)
 
-    return graph
+    return graph, out1, out2
 
 
 def write_network(network, flows_start_sink, filename):
@@ -88,7 +89,7 @@ def write_network(network, flows_start_sink, filename):
         p.start = flows_start_sink[f.id][0]
         p.sink = flows_start_sink[f.id][1]
 
-    with write_pbz(filename, "output.descr") as w:
+    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/output.descr") as w:
         for obj in objs:
             w.write(obj)
 
