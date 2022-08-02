@@ -1,7 +1,10 @@
-# This code is written by Karim Hadidane .
-# For any questions or problems, please contact the author of the code at (karim.hadidane@epfl.ch)
+# This code is based on the prepare_dataset.py written by Karim Hadidane
+# This code is changed by Weiran Wang.
+# For any questions or problems, please contact the author of the code at (weiran.wang@epfl.ch)
 
-from .graph_transformer import *
+import sys
+sys.path.insert(0, "../")
+from data.graph_transformer import *
 import torch
 from torch_geometric.data import Data, DataLoader
 import pickle
@@ -78,7 +81,7 @@ def graph2torch(G, node_ids):
 
 
 # Returns best combination in a list of dictionaries, each dictionary is a mapping between key: flow and value: its sink
-def get_best_deborahfp_combination(flow):
+def get_best_pmoofp_combination(flow):
     """
     A method that returns the best combinations i.e the combinations with minimum delay bounds
     :param flow: the flow of interest to explore
@@ -86,17 +89,17 @@ def get_best_deborahfp_combination(flow):
     each combination is in the form of dictionary
     """
     # the minimum delay bound found in all the combinations
-    min_delay_bound = flow.deborahfp.delay_bound
+    min_delay_bound = flow.pmoofp.delay_bound
 
-    # Iterate over all explored combinations for DEBORAH FP exhaustive search
-    min_combinations = [dict(comb.flows_prolongation) for comb in flow.deborahfp.explored_combination \
+    # Iterate over all explored combinations for PMOO FP exhaustive search
+    min_combinations = [dict(comb.flows_prolongation) for comb in flow.pmoofp.explored_combination \
                         if  comb.delay_bound == min_delay_bound ]
 
     return min_combinations
 
 
 # a method to read the network models and extract the graphs , and save them in pickle files
-def prepare_dataset(path, train, to_pickle=True):
+def prepare_dataset_pmoo(path, train, to_pickle=True):
     """
 
     :param path: path to the dataset raw file
@@ -114,13 +117,13 @@ def prepare_dataset(path, train, to_pickle=True):
 
         for flow in network.flow:
 
-            # If the flow has been explored using deborah FP
-            if flow.HasField("deborahfp"):
+            # If the flow has been explored using pmoo FP
+            if flow.HasField("pmoofp"):
                 # create version of a graph where the current flow is the flow of interest (Algorithm 2 of the paper)
                 G_f, pro_dict, node_ids = prolong_graph(G, flow.id, flow_paths)
 
                 # best combinations are the ones that yield minimum delay bound, multiple optimal combinations can exist
-                best_combinations = get_best_deborahfp_combination(flow)
+                best_combinations = get_best_pmoofp_combination(flow)
 
                 flows_that_can_be_prolonged = set(pro_dict.keys())
 
@@ -129,8 +132,8 @@ def prepare_dataset(path, train, to_pickle=True):
                 # Append the created graph to the dataset
                 graphs.append(grph)
 
-                # worth prolonging if deborah FP gives tighter delay bound than Deborah
-                worth_prolonging = flow.deborahfp.delay_bound < flow.deborah.delay_bound
+                # worth prolonging if pmoo FP gives tighter delay bound than Pmoo
+                worth_prolonging = flow.pmoofp.delay_bound < flow.pmoo.delay_bound
                 foi_index = node_ids["f_" + str(flow.id)]
 
                 possible_targets = []
@@ -177,8 +180,17 @@ def prepare_dataset(path, train, to_pickle=True):
     return graphs, targets
 
 
+def main():
+    # dataset_address = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/Network_Example/dataset-attack-large.pbz"
+    dataset_address = "/Users/wangweiran/Desktop/EPFL/SemesterProject/EPFL_Network_Calculus_Semester_Project/dataset-rtas2021/dataserv.ub.tum.de/dataset-train.pbz"
+    prepare_dataset_pmoo(dataset_address, train=True)
+
+
 if __name__ == "__main__":
+    """
     p = argparse.ArgumentParser()
     p.add_argument("input")
     args = p.parse_args()
+    """
+    main()
 
