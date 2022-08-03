@@ -1,8 +1,27 @@
+# This code is written by Weiran Wang
+# For any questions, please contact the author of the code at (weiran.wang@epfl.ch)
+
 from pbzlib import write_pbz, open_pbz
-from output.adversaril_attack_graph_generation.attack_pb2 import *
+from output.dataset_structure.attack_pb2 import *
+from py4j.java_gateway import JavaGateway
 
 
-def write_attacked_network(network, perturbed_graph, filename):
+def write_attacked_network(network, perturbed_graph, foi, filename):
+
+    """
+    A method that writes the network after the adversarial attack
+    into a protobuf file according to the attack.descr description file
+    and also calculate the delay bound for this network
+    :param network: the original network before the attack
+    :perturbed_graph: the network matrix after the attack
+    :param foi: the foi id
+    :param filename: the output filename
+    """
+
+    # Connect to the JVM
+    gateway = JavaGateway
+    double_class = gateway.jvm.double
+    int_class = gateway.jvm.int
     
     objs = [Network(id=1)]
     
@@ -29,6 +48,36 @@ def write_attacked_network(network, perturbed_graph, filename):
         if f.path[0] == f.path[-1]:
             p.path.append(f.path[0])
 
+    num_server = len(network.server)
+    num_flow = len(network.flow)
+
+    # Calculate the delay bound
+    # Collect the network features which will pass to the NetCal4Python.java
+    server_rate_java = gateway.new_array(double_class, num_server)
+    server_latency_java = gateway.new_array(double_class, num_server)
+    flow_rate_java = gateway.new_array(double_class, num_flow)
+    flow_burst_java = gateway.new_array(double_class, num_flow)
+    flow_src_java = gateway.new_array(int_class, num_flow)
+    flow_dest_java = gateway.new_array(int_class, num_flow)
+
+    # Fill in the network features
+    for s in objs[0].server:
+        server_rate_java[s.id] = s.rate
+        server_latency_java[s.id] = s.latency
+        
+    for f in objs[0].flow:
+        flow_rate_java[f.id] = f.rate
+        flow_burst_java[f.id] = f.burst
+        flow_src_java[f.id] = f.path[0]
+        flow_dest_java[f.id] = f.path[-1]
+
+    # Get the network topology instance and call the delayBoundCalculation Java method
+    network_topology = gateway.entry_point
+    delay_bound = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_dest_java, foi)
+    print("pmoo original delay bound: ", delay_bound, "\n")
+    objs[0].flow[foi].pmoo.delay_bound = delay_bound
+
+    # Write the network topology
     with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/adversaril_attack_graph_generation/attack.descr") as w:
         for obj in objs:
             w.write(obj)
