@@ -29,6 +29,6 @@ def write_attacked_network(network, perturbed_graph, filename):
         if f.path[0] == f.path[-1]:
             p.path.append(f.path[0])
 
-    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Adversarial_Attack_GNN/DeepFP_gnn-main/src/output/adversaril_attack_graph_generation/attack.descr") as w:
+    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/adversaril_attack_graph_generation/attack.descr") as w:
         for obj in objs:
             w.write(obj)
