@@ -44,18 +44,15 @@ message Result {
 
 message FPResult {
   // Delay bound of the foi
-  // This corresponds to the minimum of the delay bounds found by exploring the different combinations
+  // This corresponds to the delay bounds by flow prolongation
   double delay_bound = 1;
 
   // List of the different flow prolongation which have been evaluated
-  repeated FPCombination explored_combination = 2;
+  repeated FPCombination prolonged_flow = 2;
 }
 
 // Describes a combination of cross-flows prolongations
 message FPCombination {
-  // Delay bound of the foi of this particular flow prolongation
-  double delay_bound = 1;
-
   // Describes where the different cross-flows are being prolonged
   // Map key: Flow id of the flow being prolonged
   // Map value: Server id to which the flow has been prolonged

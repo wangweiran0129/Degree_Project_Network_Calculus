@@ -1,5 +1,5 @@
 
-Â
+•
 attack.protonetcal"c
 Network
 id (Rid&
@@ -20,14 +20,12 @@
 	deborahfp (2.netcal.FPResultR	deborahfp")
 Result
 delay_bound (R
-delayBound"u
+delayBound"i
 FPResult
 delay_bound (R
-delayBoundH
-explored_combination (2.netcal.FPCombinationRexploredCombination"Ó
-FPCombination
-delay_bound (R
-delayBound[
+delayBound<
+prolonged_flow (2.netcal.FPCombinationRprolongedFlow"²
+FPCombination[
 flows_prolongation (2,.netcal.FPCombination.FlowsProlongationEntryRflowsProlongationD
 FlowsProlongationEntry
 key (Rkey

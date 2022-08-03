@@ -1,11 +1,16 @@
-import sys
+# This code is written by Karim Hadidane, and changed by Weiran Wang.
+# For any questions or problems, please contact the author of the code at (weiran.wang@epfl.ch)
+
+
+import sys, re
 sys.path.insert(0, "../src/")
 from data.graph_transformer import *
 from data.prepare_dataset_pmoo import *
 from data.prepare_dataset_deborah import *
 from model.train_model import *
-from output.output_pb2 import *
+from output.dataset_structure.attack_pb2 import *
 from pbzlib import write_pbz, open_pbz
+from py4j.java_gateway import JavaGateway
 
 
 def predict_network(network, foi_id, model, output_file="output.pbz"):
@@ -61,18 +66,25 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
     for flow, server in to_be_prolonged.items():
         start_sink_dict[flow][1] = server
 
-    write_network(network, start_sink_dict, output_file)
+    write_network(network, start_sink_dict, foi_id, output_file)
 
     return graph, out1, out2
 
 
-def write_network(network, flows_start_sink, filename):
+def write_network(network, flows_start_sink, foi, filename):
     """
     A method that writes the network generated into a protobuf file according to the output.descr description file
     :param network: the network parameters
     :param flows_start_sink: the flows path
+    :param foi: the foi id
     :param filename: output filename
     """
+
+    # Connect to the JVM
+    gateway = JavaGateway()
+    double_class = gateway.jvm.double
+    int_class = gateway.jvm.int
+
     objs = [Network(id=1)]
 
     for s in network.server:
@@ -86,20 +98,57 @@ def write_network(network, flows_start_sink, filename):
         p.id = f.id
         p.rate = f.rate
         p.burst = f.burst
-        p.start = flows_start_sink[f.id][0]
-        p.sink = flows_start_sink[f.id][1]
+        flow_src = flows_start_sink[f.id][0]
+        flow_dest = flows_start_sink[f.id][1]
+        if flow_src == flow_dest:
+            p.path.append(flow_src)
+        else:
+            for flow_path in range(flow_src, flow_dest+1):
+                p.path.append(flow_path)
 
-    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/output.descr") as w:
+    num_server = len(network.server)
+    num_flow = len(network.flow)
+    
+    # Calculate the delay bound
+    # Collect the network features which will pass to the NetCal4Python.java
+    server_rate_java = gateway.new_array(double_class, num_server)
+    server_latency_java = gateway.new_array(double_class, num_server)
+    flow_rate_java = gateway.new_array(double_class, num_flow)
+    flow_burst_java = gateway.new_array(double_class, num_flow)
+    flow_src_java = gateway.new_array(int_class, num_flow)
+    flow_dest_java = gateway.new_array(int_class, num_flow)
+
+    # Fill in the network features
+    for s in objs[0].server:
+        server_rate_java[s.id] = s.rate
+        server_latency_java[s.id] = s.latency
+        
+    for f in objs[0].flow:
+        flow_rate_java[f.id] = f.rate
+        flow_burst_java[f.id] = f.burst
+        flow_src_java[f.id] = f.path[0]
+        flow_dest_java[f.id] = f.path[-1]
+
+    # Get the network topology instance and call the delayBoundCalculation Java method
+    network_topology = gateway.entry_point
+    delay_bound = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_dest_java, foi)
+    print("pmoo original delay bound: ", delay_bound, "\n")
+    objs[0].flow[foi].pmoo.delay_bound = delay_bound
+
+    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/dataset_structure/attack.descr") as w:
         for obj in objs:
             w.write(obj)
 
 
 
 def get_flowid_from_prolongation_node_name(s):
-    flow = int(s[s.index("_") - 1])
+    flow = int(re.search(r"\d+", s).group())
+    # flow = int(s[s.index("_") - 1])
     return flow
 
 
 def get_serverid_from_prolongation_node_name(s):
-    server = int(s[s.index("_") + 1])
+    server_temp = re.search(r"_\d+", s).group()
+    server = int(re.search(r"\d+", server_temp).group())
+    # server = int(s[s.index("_") + 1])
     return server
