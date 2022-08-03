@@ -73,7 +73,7 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
 
 def write_network(network, flows_start_sink, foi, filename):
     """
-    A method that writes the network generated into a protobuf file according to the output.descr description file
+    A method that writes the network generated into a protobuf file according to the attack.descr description file
     :param network: the network parameters
     :param flows_start_sink: the flows path
     :param foi: the foi id
