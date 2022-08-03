@@ -78,6 +78,6 @@ def write_attacked_network(network, perturbed_graph, foi, filename):
     objs[0].flow[foi].pmoo.delay_bound = delay_bound
 
     # Write the network topology
-    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/adversaril_attack_graph_generation/attack.descr") as w:
+    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/dataset_structure/attack.descr") as w:
         for obj in objs:
             w.write(obj)
