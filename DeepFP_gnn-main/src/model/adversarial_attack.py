@@ -94,7 +94,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
                     topology_id = original_network.id
                     break
             
-            print("----- topology id : ", topology_id, " _____")
+            print("----- topology id : ", topology_id, " -----")
 
             if topology_id in potential_attack_target_topology_id:
             

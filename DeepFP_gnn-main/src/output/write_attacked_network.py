@@ -19,7 +19,7 @@ def write_attacked_network(network, perturbed_graph, foi, filename):
     """
 
     # Connect to the JVM
-    gateway = JavaGateway
+    gateway = JavaGateway()
     double_class = gateway.jvm.double
     int_class = gateway.jvm.int
     
