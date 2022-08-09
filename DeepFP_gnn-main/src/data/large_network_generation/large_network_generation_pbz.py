@@ -3,8 +3,6 @@
 
 import random
 import collections
-import os
-from threading import Thread
 from tqdm import tqdm
 from pbzlib import write_pbz
 from large_network.large_network_pb2 import *
@@ -32,7 +30,7 @@ def large_network(num_topo):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(20, 40)
+        num_server = random.randint(30, 40)
         num_flow = random.randint(300, 400)
 
         # To simplify the calculation in the adverseari attack process
@@ -52,13 +50,13 @@ def large_network(num_topo):
         for i in range(num_flow):
             flow = objs[topo_id].flow.add()
             flow.id = i
-            flow.rate = random.uniform(0.000001, 0.00005)
+            flow.rate = random.uniform(0.00001, 0.00005)
             flow.burst = random.uniform(0.01, 1)
 
             # I want the foi to cross nearly the whole topology due to the NetCal characteristics
             if flow.id == foi:
                 flow_src = random.randint(0, 5)
-                flow_dest = random.randint(num_server-6, num_server-1)
+                flow_dest = num_server-1
             else:
                 flow_src = random.randint(0, num_server-1)
                 flow_dest = random.randint(flow_src, num_server-1)
@@ -159,13 +157,13 @@ def large_network(num_topo):
         print("# possible flows ", length_possible_flow_to_be_prolonged)
 
         # Add the explore combination (potential flow prolongation)
-        num_explore_combination = random.randint(num_flow*100, num_flow*200)
+        num_explore_combination = random.randint(num_flow*500, num_flow*1000)
         real_num_explore_combination = 0
         print("# explored combination ", num_explore_combination, "\n")
 
         for i in tqdm(range(num_explore_combination)):
 
-            flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(round(length_possible_flow_to_be_prolonged/10), length_possible_flow_to_be_prolonged))
+            flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(1, length_possible_flow_to_be_prolonged))
             flow_to_be_prolonged.sort()
 
             # Backup the original flow destination servers
@@ -184,14 +182,14 @@ def large_network(num_topo):
             
             # To reduce the size of dataset, only the tigher delay bounds are recorded
             if delay_bound_after_prolongation <= original_delay_bound:
-                print("BINGO! One tigher delay bound is found!")
                 objs[topo_id].flow[foi].pmoofp.explored_combination.add()
                 for fid in flow_to_be_prolonged:
                     objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
                 objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].delay_bound = delay_bound_after_prolongation
                 real_num_explore_combination = real_num_explore_combination + 1
-        
-        print("real # explored combination : ", real_num_explore_combination)
+                print("BINGO! One tigher delay bound is found!")
+                print("Iteration : ", i)
+                print("# real explore combination : ", real_num_explore_combination)
         
         # The pmoofp.delay_bound is the tightest value among all the explored combinations
         if real_num_explore_combination != 0:
@@ -204,13 +202,13 @@ def large_network(num_topo):
         print("")
 
         # Write the network topology into the pbz file
-        with write_pbz("dataset-attack-large.pbz", "DeepFP_gnn-main/src/data/large_network_generation/large_network/large_network.descr") as w:
+        with write_pbz("dataset-attack-large.pbz", "large_network/large_network.descr") as w:
             for obj in objs:
                 w.write(obj)
 
 
 def main():
-    large_network(1)
+    large_network(10)
 
 
 if __name__ == "__main__":
