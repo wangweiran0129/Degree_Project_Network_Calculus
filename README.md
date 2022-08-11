@@ -17,7 +17,7 @@ export PATH=$JAVA_HOME/bin:$PATH
 export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
 ```
 
-For python environment, it is recommended to read the SCITAS Documentation on [Python Virtual Environment]().
+For python environment, it is recommended to read the SCITAS Documentation on [Python Virtual Environment](https://scitas-data.epfl.ch/confluence/display/DOC/Python+Virtual+Environments).
 
 For the writing of .sh script used for running the code on EPFL servers, please refer to one example [here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh).
 
