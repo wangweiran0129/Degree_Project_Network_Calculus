@@ -1,32 +1,0 @@
-
-•
-attack.protonetcal"c
-Network
-id (Rid&
-server (2.netcal.ServerRserver 
-flow (2.netcal.FlowRflow"F
-Server
-id (Rid
-rate (Rrate
-latency (Rlatency"ü
-Flow
-id (Rid
-rate (Rrate
-burst (Rburst
-path (Rpath"
-pmoo (2.netcal.ResultRpmoo(
-pmoofp (2.netcal.FPResultRpmoofp(
-deborah (2.netcal.ResultRdeborah.
-	deborahfp (2.netcal.FPResultR	deborahfp")
-Result
-delay_bound (R
-delayBound"i
-FPResult
-delay_bound (R
-delayBound<
-prolonged_flow (2.netcal.FPCombinationRprolongedFlow"²
-FPCombination[
-flows_prolongation (2,.netcal.FPCombination.FlowsProlongationEntryRflowsProlongationD
-FlowsProlongationEntry
-key (Rkey
-value (Rvalue:8bproto3

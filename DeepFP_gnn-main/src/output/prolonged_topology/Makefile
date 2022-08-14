@@ -1,4 +1,4 @@
-OUT=attack_pb2.py attack.descr
+OUT=prolonged_topology_pb2.py prolonged_topology.descr
 
 all: $(OUT)
 
