@@ -18,7 +18,7 @@ def potential_attack_target_pred1(pred_file):
 
     # Grab the topology id from the file name
     topology_id = int(re.findall(r'\d+', pred_file)[0])
-    print("topology id : ", topology_id)
+    print("----- Target 1 Analysis Topology id : ", topology_id, "-----")
 
     # Navigate to the PRED1 chunk
     file = csv.reader(open(pred_file))
@@ -36,7 +36,7 @@ def potential_attack_target_pred1(pred_file):
     potential_attack_target = []
     
     for index in range(len(fois)):
-        if abs(PRED1[index] - 0.5) < 0.1:
+        if abs(PRED1[index] - 0.5) < 0.05:
             potential_attack_target.append([topology_id, fois])
 
     return potential_attack_target
@@ -52,7 +52,7 @@ def potential_attack_target_pred2(pred_file):
 
     # Grab the topology id from the file name
     topology_id = int(re.findall(r'\d+', pred_file)[0])
-    print("topology id : ", topology_id)
+    print("----- Target 2 Analysis Topology id : ", topology_id, "-----")
 
     flow_start_line = []
     flow_end_line = []
@@ -107,12 +107,13 @@ def potential_attack_target_pred2(pred_file):
                 flow_pred.append(PREDs[foi_index][counter])
                 counter = counter + 1
             flow_pred_max = max(flow_pred)
+
             # Keep a record on the topology id, flow of interest id, and the flow id
             flow_pred.remove(flow_pred_max)
             for pred_value in flow_pred:
-                if abs(flow_pred_max - pred_value) <= 0.01 and flow_pred_max != pred_value:
+                if abs(flow_pred_max - pred_value) <= 0.01 and flow_pred_max != pred_value and flow_pred_max > 0.1:
                     potential_attack_target.append([topology_id, foi, flow_counter[flow_index][0]])
-        print("potential attack target : ", potential_attack_target)
+                    break
     return potential_attack_target
 
 
@@ -120,8 +121,7 @@ def main():
 
     main_path = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/"
 
-    # For pmoo
-    pred_path = main_path + "Network_Information_and_Analysis/"
+    pred_path = main_path + "Network_Information_and_Analysis/Prediction_Value/"
 
     pred_files = os.listdir(pred_path)
     if ".DS_Store" in pred_files:
@@ -134,14 +134,17 @@ def main():
     count2 = 0
 
     for pred_file in pred_files:
+
         potential_attack_target1 = potential_attack_target_pred1(pred_path + pred_file)
         if len(potential_attack_target1) != 0:
+            # The initial writing of this file
             if count1 == 0 :
                 with open(potential_attack_target1_csv, "w") as csvfile:
                     pred1_csv = csv.writer(csvfile)
                     pred1_csv.writerow(["topology id", "foi id", "flow id"])
                     for i in range(len(potential_attack_target1)):
                         pred1_csv.writerow([potential_attack_target1[i][0], potential_attack_target1[i][1]])
+            # Otherwise, append the content into the file
             else:
                 with open(potential_attack_target1_csv, "+a") as csvfile:
                     pred1_csv = csv.writer(csvfile)
@@ -151,13 +154,16 @@ def main():
             count1 = count1 + 1
         
         potential_attack_target2 = potential_attack_target_pred2(pred_path + pred_file)
+        print("potential attack target : ", potential_attack_target2)
         if len(potential_attack_target2) != 0:
+            # The initial writing of this file
             if count2 == 0:
                 with open(potential_attack_target2_csv, "w") as csvfile:
                     pred2_csv = csv.writer(csvfile)
                     pred2_csv.writerow(["topology id", "foi id", "flow id"])
                     for i in range(len(potential_attack_target2)):
                         pred2_csv.writerow([potential_attack_target2[i][0], potential_attack_target2[i][1], potential_attack_target2[i][2]])
+            # Otherwise, append the content into the file
             else:
                 with open(potential_attack_target2_csv, "+a") as csvfile:
                     pred2_csv = csv.writer(csvfile)
