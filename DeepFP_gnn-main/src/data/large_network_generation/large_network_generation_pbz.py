@@ -5,7 +5,7 @@ import random
 import collections
 from tqdm import tqdm
 from pbzlib import write_pbz
-from large_network.large_network_pb2 import *
+from network_structure.network_structure_pb2 import *
 from py4j.java_gateway import JavaGateway
 
 
@@ -30,8 +30,8 @@ def large_network(num_topo):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(30, 40)
-        num_flow = random.randint(300, 400)
+        num_server = random.randint(5, 10)
+        num_flow = random.randint(20, 30)
 
         # To simplify the calculation in the adverseari attack process
         # There will be only one foi in each topology
@@ -201,14 +201,14 @@ def large_network(num_topo):
             objs[topo_id].flow[foi].pmoofp.delay_bound = min_fp_delay_bound
         print("")
 
-        # Write the network topology into the pbz file
-        with write_pbz("dataset-attack-large.pbz", "large_network/large_network.descr") as w:
-            for obj in objs:
-                w.write(obj)
+    # Write the network topology into the pbz file
+    with write_pbz("dataset-attack-large.pbz", "network_structure/network_structure.descr") as w:
+        for obj in objs:
+            w.write(obj)
 
 
 def main():
-    large_network(10)
+    large_network(3)
 
 
 if __name__ == "__main__":

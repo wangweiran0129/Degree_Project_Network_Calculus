@@ -181,9 +181,8 @@ def prepare_dataset_pmoo(path, train, to_pickle=True):
 
 
 def main():
-    # dataset_address = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/Network_Example/dataset-attack-large.pbz"
-    dataset_address = "/Users/wangweiran/Desktop/EPFL/SemesterProject/EPFL_Network_Calculus_Semester_Project/dataset-rtas2021/dataserv.ub.tum.de/dataset-train.pbz"
-    prepare_dataset_pmoo(dataset_address, train=True)
+    dataset_address = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/Network_Example/dataset-attack-large.pbz"
+    prepare_dataset_pmoo(dataset_address, train=False)
 
 
 if __name__ == "__main__":

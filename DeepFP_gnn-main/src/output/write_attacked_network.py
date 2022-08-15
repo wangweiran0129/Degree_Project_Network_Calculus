@@ -1,8 +1,10 @@
 # This code is written by Weiran Wang
 # For any questions, please contact the author of the code at (weiran.wang@epfl.ch)
 
+import sys
+sys.path.insert(0, "../")
 from pbzlib import write_pbz, open_pbz
-from output.dataset_structure.attack_pb2 import *
+from data.large_network_generation.network_structure.network_structure_pb2 import *
 from py4j.java_gateway import JavaGateway
 
 
@@ -23,7 +25,7 @@ def write_attacked_network(network, perturbed_graph, foi, filename):
     double_class = gateway.jvm.double
     int_class = gateway.jvm.int
     
-    objs = [Network(id=1)]
+    objs = [Network(id=0)]
     
     for s in network.server:
         p = objs[0].server.add()
@@ -74,10 +76,10 @@ def write_attacked_network(network, perturbed_graph, foi, filename):
     # Get the network topology instance and call the delayBoundCalculation Java method
     network_topology = gateway.entry_point
     delay_bound = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_dest_java, foi)
-    print("pmoo original delay bound: ", delay_bound, "\n")
+    print("pmoo delay bound: ", delay_bound, "\n")
     objs[0].flow[foi].pmoo.delay_bound = delay_bound
 
     # Write the network topology
-    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/dataset_structure/attack.descr") as w:
+    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/data/large_network_generation/network_structure/network_structure.descr") as w:
         for obj in objs:
             w.write(obj)

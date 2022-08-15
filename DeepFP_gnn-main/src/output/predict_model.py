@@ -8,7 +8,7 @@ from data.graph_transformer import *
 from data.prepare_dataset_pmoo import *
 from data.prepare_dataset_deborah import *
 from model.train_model import *
-from output.dataset_structure.attack_pb2 import *
+from output.prolonged_topology.prolonged_topology_pb2 import *
 from pbzlib import write_pbz, open_pbz
 from py4j.java_gateway import JavaGateway
 
@@ -132,13 +132,12 @@ def write_network(network, flows_start_sink, foi, filename):
     # Get the network topology instance and call the delayBoundCalculation Java method
     network_topology = gateway.entry_point
     delay_bound = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_dest_java, foi)
-    print("pmoo original delay bound: ", delay_bound, "\n")
+    print("pmoo delay bound: ", delay_bound, "\n")
     objs[0].flow[foi].pmoo.delay_bound = delay_bound
 
     with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/dataset_structure/attack.descr") as w:
         for obj in objs:
             w.write(obj)
-
 
 
 def get_flowid_from_prolongation_node_name(s):

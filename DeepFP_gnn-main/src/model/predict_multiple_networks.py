@@ -24,42 +24,51 @@ def predict_original_network(model, original_network, topology_id):
     # The main path of this project / Github repo
     main_path = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/"
 
-    # Transform the original network to get the number of servers and flows
+    # The original_G is the network topology before the flow prolongation
     original_G, flow_paths = net2basegraph(original_network)
     num_server = len(original_network.server)
 
+    # Find the foi (Though in my newly-generated network, there is only one foi)
     fois = []
     for f in original_network.flow:
         if f.HasField('pmoofp'):
             fois.append(f.id)
-    print("fois : ", fois)
+
+    print("foi path : ", original_network.flow[fois[0]].path)
 
     # GNN prediction path for original topologies
     original_fp_path = main_path + 'Network_Information_and_Analysis/'
 
     # Prolong the flow based on the foi
     for foi in fois:
+        print("----- topology id : ", topology_id, "-----")
+        print("----- foi : ", foi, "-----")
 
         # Transoform the original network to get the matrix for the prolonged nodes information
+        
+        # prolonged_G is the network topology after the flow prolongation
         prolonged_G, pro_dict, node_ids = prolong_graph(original_G, foi, flow_paths)
+        # prolonged_graph is a torch matrix
         prolonged_graph = graph2torch_pmoo(prolonged_G, node_ids)
         
         # Find the start servers and sink servers
         cross_flows = []
         cross_flow_combination_start_servers = []
         cross_flow_cominbation_sink_servers = []
+
         for cross_flow in prolonged_graph.x[original_G.number_of_nodes():]:
-            cross_flows.append((int)(cross_flow[-1].item() - num_server))
-            cross_flow_combination_start_servers.append(flow_paths[cross_flow[-1].item() - num_server][0])
+            flow_id = (int)(cross_flow[-1].item() - num_server)
+            cross_flows.append(flow_id)
+            cross_flow_combination_start_servers.append(flow_paths[flow_id][0])
             cross_flow_cominbation_sink_servers.append(flow_paths[foi][(int)(cross_flow[-2].item() - 1)])
         
         # Predict the ORIGINAL network, i.e., the network topology before the adversarial attack
-        original_network_after_fp = original_fp_path + 'original_' + str(topology_id) + '_' + str(foi) + '.pbz'
+        original_network_after_fp = original_fp_path + 'Original_Topology/after_fp/original_' + str(topology_id) + '_' + str(foi) + '.pbz'
         _, pred1_before_attack, pred2_before_attack = predict_network(original_network, foi, model, original_network_after_fp)
 
         # GNN prediction pred1 & pred2 analysis folder
-        prediction_file_path = main_path + "Network_Information_and_Analysis/"
-        prediction_file_name = "prediction" + str(topology_id) + ".csv"
+        prediction_file_path = main_path + "Network_Information_and_Analysis/Prediction_Value/"
+        prediction_file_name = "prediction_" + str(topology_id) + ".csv"
 
         # Create a new csv file to store the prediction results for a new network topology
         # For attacked dataset, there is only one foi in a topology
@@ -70,10 +79,8 @@ def predict_original_network(model, original_network, topology_id):
             pred_csv.writerow([foi, flow_paths[foi][0], flow_paths[foi][-1], pred1_before_attack[num_server+foi].item()])
             pred_csv.writerow(["flow id", "start server", "sink server", "PRED2 before attack "]) 
             for line in range(original_G.number_of_nodes(), prolonged_G.number_of_nodes()):
-                pred_csv.writerow([cross_flows[line - original_G.number_of_nodes()], \
-                    cross_flow_combination_start_servers[line - original_G.number_of_nodes()], cross_flow_cominbation_sink_servers[line - original_G.number_of_nodes()], \
-                    pred2_before_attack[line].item()])
-
+                fid = line - original_G.number_of_nodes()
+                pred_csv.writerow([cross_flows[fid], cross_flow_combination_start_servers[fid], cross_flow_cominbation_sink_servers[fid], pred2_before_attack[line].item()])
 
 def predict_attacked_network(model, attacked_network, topology_id, eps):
 
@@ -110,16 +117,14 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = torch.load(main_path + "DeepFP_gnn-main/src/model/ggnn_pmoo.pt", map_location=torch.device(device))
     
-    """
     # Original network path
-    original_network_features_path = main_path + "Network_Example/dataset-attack-large.pbz"
+    original_network_features_path = main_path + "Network_Information_and_Analysis/Original_Topology/before_fp/dataset-attack-large.pbz"
 
     for original_network in pbzlib.open_pbz(original_network_features_path):
         topology_id = original_network.id
-        print("\n----- topology_id : ", topology_id, "-----")
         predict_original_network(model, original_network, topology_id)
-    """
 
+    """
     # Attacked network path
     attacked_network_path = main_path + "Network_Information_and_Analysis/Attacked/before_fp/"
     files = os.listdir(attacked_network_path)
@@ -130,6 +135,7 @@ def main():
         print("file : ", file)
         eps, topo_id = re.findall(r"\d+\.?\d*", file)[0], re.findall(r"\d+\.?\d*", file)[1]
         predict_attacked_network(model, next(pbzlib.open_pbz(attacked_network_path+file)), topo_id, eps)
+    """
 
 
 if __name__ == "__main__":

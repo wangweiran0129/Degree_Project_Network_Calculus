@@ -1,4 +1,4 @@
-OUT=large_network_pb2.py large_network.descr
+OUT=network_structure_pb2.py network_structure.descr
 
 all: $(OUT)
 
