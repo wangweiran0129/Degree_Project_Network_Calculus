@@ -26,7 +26,7 @@ For the writing of .sh script used for running the code on EPFL servers, please 
 - [netcal_analysis.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/analysis/netcal_analysis.py) : Call the ```NetCal4Python.java``` to calculate the delay bound of a given topology (The topology is stored in a .pbz format).
 - [potential_attack_target.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/analysis/potential_attack_target.py) :  Find the potential attack target(s) based on the two prediction values of GNN. For the first prediction value, it is mainly based on the flow of interest, and tells whether other flows of this topology are worth prolonging (the criteria value is 0.5). For the second prediction values, they are based on the possibile prolonging flows whose criteria is the highest values.
 - [graph_transformer.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/graph_transformer.py) : Transform a human reading-friendly graph to a GNN-based recognized graph.
-- [prepare_dataset_pmoo.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/prepare_dataset_pmoo.py) :  Transform .pbz format dataset to a .pickle format dataset based on the NetCal method pmoo. The .pickle format dataset is based on matrices and will be used for the trainning of GNN and the FGSM adversarial attack.
+- [prepare_dataset_pmoo.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/prepare_dataset_pmoo.py) :  Transform .pbz format dataset to a .pickle format dataset based on the NetCal method pmoo. The .pickle format dataset is based on matrices and will be used for the trainning of GNN and the FGSM adversarial attack. One graph.pickle file is the network feature matrices, and anther target.pickle file is the correct flow prolongation matrices.
 - [prepare_dataset_deborah.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/prepare_dataset_deborah.py) : Same above while the NetCal method is changed to deborah.
 - [large_network_generation_pbz.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/large_network_generation_pbz.py): Generate a large-scale network dataset for adversarial attack, i.e., the number of servers and flows are large.
 - [large_network.proto](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/large_network/large_network.proto): Define the dataset structure for large-scale network. It is mainly used by ```large_network_generation_pbz.py```.
@@ -44,3 +44,17 @@ For the writing of .sh script used for running the code on EPFL servers, please 
 ### DNC
 - [NetCal4Python.java](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DNC/src/main/java/org/networkcalculus/dnc/degree_project/NetCal4Python.java) : Calculate the delay bounds on a given network setting.
  - [NetCal.jar](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/NetCal.jar) : The .jar of this NetCal/DNC repo, for the convenience of running the NetCal/DNC on the EPFL server by command ```java -jar NetCal.jar```.
+
+## Reproduction and Usage Specification
+### Train the GNN Model
+1. Please download the dataset by followoing the this [link](https://github.com/fabgeyer/dataset-rtas2021).
+2. ```python3 prepare_dataset_deborah.py``` or ```python3 prepare_dataset_pmoo.py``` depending on the Network Calculus method. It will change the dataset stored in .pbz format to a .pickle format where network topologies are changed to network matrices.
+3. ```python3 train_model.py``` to train the model.
+4. ```python3 predict_model.py``` to use the trained model to predict the flow prolongations on a brand new network topology.
+
+### Do the Adversarial Attack on the Network Topologies
+1. ```Make``` under the large_network folder if you cannot find the ```large_network.proto```. This will compile and generate two necessary data structure file used for the creation of a new dataset. Furthermore, pmoo will be the main NetCal method used in the Adversarial Attack.
+2. ```python3 dataset_network_generation_pbz.py``` to generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```.
+3. ```python3 prepare_dataset_pmoo.py``` The input is the newly-created larger size dataset ```dataset-attack-large.pbz```, and will ouput two .pickle files: ```attack_graphs.pickle``` and ```attack_targets.pickle```.
+4. ```python3 predict_multiple_networks.py``` The input is also the ```dataset-attack-large.pbz``` and will output two files. One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).
+5. 
