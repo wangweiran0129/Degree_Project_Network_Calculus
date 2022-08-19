@@ -1,7 +1,6 @@
 # This code is written by Weiran Wang
 # For any questions or problems, please contact the author of code at (weiran.wang@epfl.ch)
 
-
 import torch
 import sys
 sys.path.append("../")
