@@ -10,14 +10,43 @@ The whole project is run on my Macbook Pro (Intel Chip) and the EPFL servers. It
 - Python packages information can be found at [requirements.txt](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/requirements.txt)
 
 ## EPFL SCITAS Server Configuration
-Considering students are not the admins of EPFL servers, it is therefore a good idea to put Java configuration into a user-defined file under the home path, i.e., add the following three lines into the .bashrc file.  
+Java is mainly used for NetCal/DNC. If there is no Java config. in your computer, please download it from the official website. Considering students are not the admins of EPFL servers, it is therefore a good idea to put Java configuration into a user-defined file under the home path, i.e., add the following three lines into the .bashrc file.
 ```
-export JAVA_HOME=/home/<your_epfl_account>/jdk-16.0.2
-export PATH=$JAVA_HOME/bin:$PATH
-export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+$export JAVA_HOME=/home/<your_epfl_account>/jdk-16.0.2
+$export PATH=$JAVA_HOME/bin:$PATH
+$export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+Python is used for GNN training and the subsequent Adversarial Attack. It is highly recommended to use Python in a user-defined virtual environment on EPFL servers.
+
+To create a python virtual environemnt:  
+```
+$virtualenv --system-site-packages venvs/<env_name>
 ```
 
-For python environment, it is recommended to read the SCITAS Documentation on [Python Virtual Environment](https://scitas-data.epfl.ch/confluence/display/DOC/Python+Virtual+Environments).
+To activate and use the virtual environment:  
+```
+$source venvs/<env_name>/bin/activate
+```
+
+Confirm python3 is the default python version instead of python2:  
+```
+$module spider python
+$module spider python/<python_version>
+$module load gcc/<gcc_version> python/<python_version>
+```
+
+Install the required python packages: [requirements.txt](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/requirements.txt). Please pay great attention to torch-related packages. There are several cuda versions available on the IZAR server. However, as far as to our test, ```cuda/10.2.89``` is the only one which meets all required dependencies for both PyTorch and PyG. Therefore, for torch-related packages installation on the server, please follow the steps:
+```
+$module load cuda/10.2.89
+$pip3 install torch
+$python -c "import torch; print(torch.__version__)" # confirm the torch version
+$python -c "import torch; print(torch.version.cuda)" # confirt the cuda version
+$pip install torch-scatter -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
+$pip install torch-sparse -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
+$pip install torch-geometric
+```
+
+For more information on Python environment, it is recommended to read the SCITAS Documentation on [Python Virtual Environment](https://scitas-data.epfl.ch/confluence/display/DOC/Python+Virtual+Environments).
 
 For the writing of .sh script used for running the code on EPFL servers, please refer to one example [here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh).
 
