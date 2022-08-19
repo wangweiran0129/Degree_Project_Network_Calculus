@@ -46,6 +46,8 @@ $pip install torch-sparse -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
 $pip install torch-geometric
 ```
 
+It is also worth mentioning that if you want to import ```torch_geometric```, please also import ```scipy``` at the same time.
+
 For more information on Python environment, it is recommended to read the SCITAS Documentation on [Python Virtual Environment](https://scitas-data.epfl.ch/confluence/display/DOC/Python+Virtual+Environments).
 
 For the writing of .sh script used for running the code on EPFL servers, please refer to one example [here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh).
