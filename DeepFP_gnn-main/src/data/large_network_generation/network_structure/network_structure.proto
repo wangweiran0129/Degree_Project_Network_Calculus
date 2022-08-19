@@ -5,6 +5,7 @@ package netcal;
 // Describes a network in network calculus
 message Network {
     int32 id = 1;
+    double eps = 4;
     repeated Server server = 2;
     repeated Flow flow = 3;
   }

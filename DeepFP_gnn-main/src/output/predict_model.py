@@ -8,7 +8,7 @@ from data.graph_transformer import *
 from data.prepare_dataset_pmoo import *
 from data.prepare_dataset_deborah import *
 from model.train_model import *
-from output.prolonged_topology.prolonged_topology_pb2 import *
+from data.large_network_generation.network_structure.network_structure_pb2 import *
 from pbzlib import write_pbz, open_pbz
 from py4j.java_gateway import JavaGateway
 
@@ -135,7 +135,7 @@ def write_network(network, flows_start_sink, foi, filename):
     print("pmoo delay bound: ", delay_bound, "\n")
     objs[0].flow[foi].pmoo.delay_bound = delay_bound
 
-    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/output/dataset_structure/attack.descr") as w:
+    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/data/large_network_generation/network_structure/network_structure.descr") as w:
         for obj in objs:
             w.write(obj)
 

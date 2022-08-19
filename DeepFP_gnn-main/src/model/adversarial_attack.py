@@ -180,7 +180,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
                 x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6] = torch.where(x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6]==1, max_flow_rate, x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6])
 
                 # Write the changes to a new .pbz file
-                attacked_network_path = main_path + "Network_Information_and_Analysis/Attacked_Topology/Before_FP"
+                attacked_network_path = main_path + "Network_Information_and_Analysis/Attacked_Topology/Before_FP/"
                 attacked_file_name = "attacked_" + str(eps) + "_" +str(topology_id) + "_" + str(foi) + ".pbz"
                 print("attacked network file name : ", attacked_network_path + attacked_file_name)
                 write_attacked_network(original_network, x_hat, foi, attacked_network_path+attacked_file_name)
