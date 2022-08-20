@@ -8,7 +8,7 @@
 #SBATCH --partition=gpu
 #SBATCH --qos=gpu_free
 #SBATCH --gres=gpu:1
-#SBATCH --time 02:00:00
+#SBATCH --time 06:00:00
 
 echo Running on `hostname`
 

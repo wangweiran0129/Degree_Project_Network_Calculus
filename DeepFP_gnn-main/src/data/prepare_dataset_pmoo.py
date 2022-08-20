@@ -9,6 +9,7 @@ import torch
 from torch_geometric.data import Data, DataLoader
 import pickle
 import argparse
+from scipy.sparse import coo_matrix
 
 
 # The inputs are the graph G, unique identifiers for each node, prolongation nodes if its for training
@@ -181,7 +182,7 @@ def prepare_dataset_pmoo(path, train, to_pickle=True):
 
 
 def main():
-    dataset_address = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/Network_Example/dataset-attack-large.pbz"
+    dataset_address = "large_network_generation/dataset-attack-large.pbz"
     prepare_dataset_pmoo(dataset_address, train=False)
 
 

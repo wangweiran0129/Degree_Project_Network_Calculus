@@ -3,11 +3,14 @@
 
 import random
 import collections
-import gnn
+import torch
 from tqdm import tqdm
-from pbzlib import write_pbz
-from network_structure.network_structure_pb2 import *
+from pbzlib import open_pbz, write_pbz
+from scipy.sparse import coo_matrix
 from py4j.java_gateway import JavaGateway
+import sys
+sys.path.insert(0, "../../")
+from output.predict_model import *
 
 
 def large_network_random_search(num_topo):
@@ -33,8 +36,8 @@ def large_network_random_search(num_topo):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(40, 50)
-        num_flow = random.randint(40, 50)
+        num_server = random.randint(30, 40)
+        num_flow = random.randint(300, 400)
 
         # To simplify the calculation in the adverseari attack process
         # There will be only one foi in each topology
@@ -231,14 +234,14 @@ def large_network_gnn_prediction(num_topo, model):
     # objs store the network information
     objs = []
 
-    for topo_id in range(num_topo):
+    for topo_id in tqdm(range(num_topo)):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(30, 50)
-        num_flow = random.randint(400, 500)
+        num_server = random.randint(20, 30)
+        num_flow = random.randint(200, 300)
 
-        # To simplify the calculation in the adverseari attack process
+        # To simplify the calculation in the adversearial attack process
         # There will be only one foi in each topology
         foi = random.randint(0, num_flow-1)
 
@@ -351,64 +354,34 @@ def large_network_gnn_prediction(num_topo, model):
         print("pmoo original delay bound: ", original_delay_bound, "\n")
         objs[topo_id].flow[foi].pmoo.delay_bound = original_delay_bound
 
+        # Write a temporary network file for the input of prediction
+        write_pbz("temp4pred.pbz", "network_structure/network_structure.descr", objs[topo_id])
+
         # Use the GNN model to predict the flow prolongation
-        
+        start_sink_dict = predict_sink_sever(next(open_pbz("temp4pred.pbz")), foi, model)
 
-        # Find the possible flows which can be prolonged
-        # i.e., the flow sink/destination server id < foi sink/destination server id
-        foi_sink_server = objs[topo_id].flow[foi].path[-1]
-        possbile_flow_to_be_prolonged = []
-        for f in objs[topo_id].flow:
-            if f.path[-1] < foi_sink_server:
-                possbile_flow_to_be_prolonged.append(f.id)
-        length_possible_flow_to_be_prolonged = len(possbile_flow_to_be_prolonged)
-        print("# possible flows ", length_possible_flow_to_be_prolonged)
+        # Backup the original flow destination servers
+        flow_prolonged_dest_java = gateway.new_array(int_class, num_flow)
+        for fid in range(num_flow):
+            flow_prolonged_dest_java[fid] = flow_dest_java[fid]
 
-        # Add the explore combination (potential flow prolongation)
-        num_explore_combination = random.randint(num_flow*500, num_flow*1000)
-        real_num_explore_combination = 0
-        print("# explored combination ", num_explore_combination, "\n")
+        # Add the pmoofp block
+        objs[topo_id].flow[foi].pmoofp.explored_combination.add()
+        # Change the sink servers
+        for f in start_sink_dict:
+            if objs[topo_id].flow[f].path[-1] != start_sink_dict[f][1]:
+                objs[topo_id].flow[foi].pmoofp.explored_combination[0].flows_prolongation[f] = start_sink_dict[f][1]
+                flow_prolonged_dest_java[f] = start_sink_dict[f][1]
 
-        for i in tqdm(range(num_explore_combination)):
-
-            flow_to_be_prolonged = random.sample(possbile_flow_to_be_prolonged, random.randint(1, length_possible_flow_to_be_prolonged))
-            flow_to_be_prolonged.sort()
-
-            # Backup the original flow destination servers
-            flow_prolonged_dest_java = gateway.new_array(int_class, num_flow)
-            for fid in range(num_flow):
-                flow_prolonged_dest_java[fid] = flow_dest_java[fid]
-            
-            # Prolong the flows
-            for fid in flow_to_be_prolonged:
-                original_sink_server = objs[topo_id].flow[fid].path[-1]
-                prolonged_sink_server = random.randint(original_sink_server, foi_sink_server)
-                flow_prolonged_dest_java[fid] = prolonged_sink_server
-            
-            # Compute the delay bound after the flow prolongation
-            delay_bound_after_prolongation = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_prolonged_dest_java, foi)
-            
-            # To reduce the size of dataset, only the tigher delay bounds are recorded
-            if delay_bound_after_prolongation <= original_delay_bound:
-                objs[topo_id].flow[foi].pmoofp.explored_combination.add()
-                for fid in flow_to_be_prolonged:
-                    objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
-                objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].delay_bound = delay_bound_after_prolongation
-                real_num_explore_combination = real_num_explore_combination + 1
-                print("BINGO! One tigher delay bound is found!")
-                print("Iteration : ", i)
-                print("# real explore combination : ", real_num_explore_combination)
-        
-        # The pmoofp.delay_bound is the tightest value among all the explored combinations
-        if real_num_explore_combination != 0:
-            min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[0].delay_bound
-            for ex_com_idx in range(real_num_explore_combination):
-                if objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound < min_fp_delay_bound:
-                    min_fp_delay_bound = objs[topo_id].flow[foi].pmoofp.explored_combination[ex_com_idx].delay_bound
-            print("min pmoofp delay bound : ", min_fp_delay_bound)
-            objs[topo_id].flow[foi].pmoofp.delay_bound = min_fp_delay_bound
+        # Compute the delay bound after the flow prolongation
+        delay_bound_after_prolongation = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_prolonged_dest_java, foi)
+        if delay_bound_after_prolongation > original_delay_bound:
+            print("The delay bound after fp is looser")
+        objs[topo_id].flow[foi].pmoofp.explored_combination[0].delay_bound = delay_bound_after_prolongation
+        objs[topo_id].flow[foi].pmoofp.delay_bound = delay_bound_after_prolongation
+        print("pmoo delay bound after fp : ", delay_bound_after_prolongation)
         print("")
-
+        
     # Write the network topology into the pbz file
     with write_pbz("dataset-attack-large.pbz", "network_structure/network_structure.descr") as w:
         for obj in objs:
@@ -416,7 +389,12 @@ def large_network_gnn_prediction(num_topo, model):
 
 
 def main():
-    large_network(3)
+
+    model = torch.load("../../model/deepfpPMOO.pt")
+    large_network_gnn_prediction(1000, model)
+
+    # large_network_random_search(2)
+
 
 
 if __name__ == "__main__":

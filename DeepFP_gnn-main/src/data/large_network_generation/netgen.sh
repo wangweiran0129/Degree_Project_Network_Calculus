@@ -4,14 +4,17 @@
 #SBATCH --nodes 1
 #SBATCH --cpus-per-task 1
 #SBATCH --ntasks 2
-#SBATCH --mem 4G
-#SBATCH --time 72:00:00
+#SBATCH --mem 48G
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu_free
+#SBATCH --gres=gpu:1
+#SBATCH --time 06:00:00
 
-echo "fidis $HOSTNAME"
+echo Running on `hostname`
 
-module load gcc python
+source /home/weirwang/venvs/izar-python/bin/activate
 
-source /home/weirwang/venvs/fidis-adversarial-attack-gnn/bin/activate
+python large_network_generation_pbz.py
 
 java -jar NetCal.jar &
 MY_JAVA_PID=$!

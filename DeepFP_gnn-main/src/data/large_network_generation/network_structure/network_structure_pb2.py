@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17network_structure.proto\x12\x06netcal\"Q\n\x07Network\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x1e\n\x06server\x18\x02 \x03(\x0b\x32\x0e.netcal.Server\x12\x1a\n\x04\x66low\x18\x03 \x03(\x0b\x32\x0c.netcal.Flow\"3\n\x06Server\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04rate\x18\x02 \x01(\x01\x12\x0f\n\x07latency\x18\x03 \x01(\x01\"\xc3\x01\n\x04\x46low\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04rate\x18\x02 \x01(\x01\x12\r\n\x05\x62urst\x18\x03 \x01(\x01\x12\x0c\n\x04path\x18\x04 \x03(\x05\x12\x1c\n\x04pmoo\x18\x05 \x01(\x0b\x32\x0e.netcal.Result\x12 \n\x06pmoofp\x18\x06 \x01(\x0b\x32\x10.netcal.FPResult\x12\x1f\n\x07\x64\x65\x62orah\x18\x07 \x01(\x0b\x32\x0e.netcal.Result\x12#\n\tdeborahfp\x18\x08 \x01(\x0b\x32\x10.netcal.FPResult\"\x1d\n\x06Result\x12\x13\n\x0b\x64\x65lay_bound\x18\x01 \x01(\x01\"T\n\x08\x46PResult\x12\x13\n\x0b\x64\x65lay_bound\x18\x01 \x01(\x01\x12\x33\n\x14\x65xplored_combination\x18\x02 \x03(\x0b\x32\x15.netcal.FPCombination\"\xa8\x01\n\rFPCombination\x12\x13\n\x0b\x64\x65lay_bound\x18\x01 \x01(\x01\x12H\n\x12\x66lows_prolongation\x18\x02 \x03(\x0b\x32,.netcal.FPCombination.FlowsProlongationEntry\x1a\x38\n\x16\x46lowsProlongationEntry\x12\x0b\n\x03key\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x05:\x02\x38\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17network_structure.proto\x12\x06netcal\"^\n\x07Network\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0b\n\x03\x65ps\x18\x04 \x01(\x01\x12\x1e\n\x06server\x18\x02 \x03(\x0b\x32\x0e.netcal.Server\x12\x1a\n\x04\x66low\x18\x03 \x03(\x0b\x32\x0c.netcal.Flow\"3\n\x06Server\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04rate\x18\x02 \x01(\x01\x12\x0f\n\x07latency\x18\x03 \x01(\x01\"\xc3\x01\n\x04\x46low\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04rate\x18\x02 \x01(\x01\x12\r\n\x05\x62urst\x18\x03 \x01(\x01\x12\x0c\n\x04path\x18\x04 \x03(\x05\x12\x1c\n\x04pmoo\x18\x05 \x01(\x0b\x32\x0e.netcal.Result\x12 \n\x06pmoofp\x18\x06 \x01(\x0b\x32\x10.netcal.FPResult\x12\x1f\n\x07\x64\x65\x62orah\x18\x07 \x01(\x0b\x32\x0e.netcal.Result\x12#\n\tdeborahfp\x18\x08 \x01(\x0b\x32\x10.netcal.FPResult\"\x1d\n\x06Result\x12\x13\n\x0b\x64\x65lay_bound\x18\x01 \x01(\x01\"T\n\x08\x46PResult\x12\x13\n\x0b\x64\x65lay_bound\x18\x01 \x01(\x01\x12\x33\n\x14\x65xplored_combination\x18\x02 \x03(\x0b\x32\x15.netcal.FPCombination\"\xa8\x01\n\rFPCombination\x12\x13\n\x0b\x64\x65lay_bound\x18\x01 \x01(\x01\x12H\n\x12\x66lows_prolongation\x18\x02 \x03(\x0b\x32,.netcal.FPCombination.FlowsProlongationEntry\x1a\x38\n\x16\x46lowsProlongationEntry\x12\x0b\n\x03key\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x05:\x02\x38\x01\x62\x06proto3')
 
 
 
@@ -81,17 +81,17 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _FPCOMBINATION_FLOWSPROLONGATIONENTRY._options = None
   _FPCOMBINATION_FLOWSPROLONGATIONENTRY._serialized_options = b'8\001'
   _NETWORK._serialized_start=35
-  _NETWORK._serialized_end=116
-  _SERVER._serialized_start=118
-  _SERVER._serialized_end=169
-  _FLOW._serialized_start=172
-  _FLOW._serialized_end=367
-  _RESULT._serialized_start=369
-  _RESULT._serialized_end=398
-  _FPRESULT._serialized_start=400
-  _FPRESULT._serialized_end=484
-  _FPCOMBINATION._serialized_start=487
-  _FPCOMBINATION._serialized_end=655
-  _FPCOMBINATION_FLOWSPROLONGATIONENTRY._serialized_start=599
-  _FPCOMBINATION_FLOWSPROLONGATIONENTRY._serialized_end=655
+  _NETWORK._serialized_end=129
+  _SERVER._serialized_start=131
+  _SERVER._serialized_end=182
+  _FLOW._serialized_start=185
+  _FLOW._serialized_end=380
+  _RESULT._serialized_start=382
+  _RESULT._serialized_end=411
+  _FPRESULT._serialized_start=413
+  _FPRESULT._serialized_end=497
+  _FPCOMBINATION._serialized_start=500
+  _FPCOMBINATION._serialized_end=668
+  _FPCOMBINATION_FLOWSPROLONGATIONENTRY._serialized_start=612
+  _FPCOMBINATION_FLOWSPROLONGATIONENTRY._serialized_end=668
 # @@protoc_insertion_point(module_scope)

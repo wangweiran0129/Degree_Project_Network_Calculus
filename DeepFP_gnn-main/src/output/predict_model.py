@@ -2,14 +2,14 @@
 # For any questions or problems, please contact the author of the code at (weiran.wang@epfl.ch)
 
 
-import sys, re
-sys.path.insert(0, "../src/")
+import sys, re, os
+sys.path.insert(0, "../")
 from data.graph_transformer import *
 from data.prepare_dataset_pmoo import *
 from data.prepare_dataset_deborah import *
-from model.train_model import *
 from data.large_network_generation.network_structure.network_structure_pb2 import *
-from pbzlib import write_pbz, open_pbz
+from model.train_model import *
+from pbzlib import write_pbz
 from py4j.java_gateway import JavaGateway
 
 
@@ -54,7 +54,7 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
     pro_nodes = graph.x[graph.mask]
 
     prolongations_deepfp = create_output_vector(pro_nodes, output_prolongations, 1)
-    sinks = idxmask[torch.where(prolongations_deepfp[0])[0]]
+    sinks = idxmask[torch.where(prolongations_deepfp[0])[0]].cpu()
 
     # Create a dictionary nodeids and flow id
     inv_map = {v: k for k, v in node_ids.items()}
@@ -68,7 +68,61 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
 
     write_network(network, start_sink_dict, foi_id, output_file)
 
-    return graph, out1, out2
+    return graph, out1, out2, start_sink_dict
+
+
+def predict_sink_sever(network, foi_id, model):
+    """
+    A method that uses the pre-trained model trained to predict the sink server.
+    This function is mainly used in the process of creating a larger dataset
+    :param network: a network topology stored in the .pbz file
+    :param foi_id: the flow of interest
+    :param model: the pre-trained model
+    :return: the start sink server dictionary
+    """
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # Create a base graph
+    G, flows_path = net2basegraph(network)
+
+    # prolong the graph with respect to the foi
+    G_f, pro_dict, node_ids = prolong_graph(G, foi_id, flows_path)
+
+    graph = graph2torch_pmoo(G_f, node_ids=node_ids)
+
+    adj = prepare_adjacency_matrix(graph)
+
+    out1, out2 = model(graph.to(device), adj.to(device))
+
+    # HERE a dictionary flow: (start, sink)
+    start_sink_dict = {k: [flows_path[k][0], flows_path[k][-1]] for k in flows_path.keys()}
+
+    foi_idx = torch.where(graph.x[:, 2])[0]
+    output_foi = torch.index_select(out1.view(-1), 0, foi_idx)
+    predicted_label = 1 if output_foi.item() >= 0.5 else 0
+
+    # If the prediction is that FP is not worth then write the same network
+    if not predicted_label:
+        return
+
+    idxmask = torch.where(graph.mask)[0]
+    output_prolongations = torch.index_select(out2.view(-1), 0, idxmask)
+
+    pro_nodes = graph.x[graph.mask]
+
+    prolongations_deepfp = create_output_vector(pro_nodes, output_prolongations, 1)
+    sinks = idxmask[torch.where(prolongations_deepfp[0])[0]].cpu()
+
+    # Create a dictionary nodeids and flow id
+    inv_map = {v: k for k, v in node_ids.items()}
+
+    z = [inv_map[x] for x in np.array(sinks)]
+    to_be_prolonged = {get_flowid_from_prolongation_node_name(k): get_serverid_from_prolongation_node_name(k) for k in z}
+
+    for flow, server in to_be_prolonged.items():
+        start_sink_dict[flow][1] = server
+
+    return start_sink_dict
 
 
 def write_network(network, flows_start_sink, foi, filename):
@@ -135,7 +189,9 @@ def write_network(network, flows_start_sink, foi, filename):
     print("pmoo delay bound: ", delay_bound, "\n")
     objs[0].flow[foi].pmoo.delay_bound = delay_bound
 
-    with write_pbz(filename, "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/DeepFP_gnn-main/src/data/large_network_generation/network_structure/network_structure.descr") as w:
+    print("path : ", os.getcwd())
+
+    with write_pbz(filename, "../data/large_network_generation/network_structure/network_structure.descr") as w:
         for obj in objs:
             w.write(obj)
 

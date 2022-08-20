@@ -19,7 +19,8 @@ NodeType= enum.IntEnum("NodeType", [
 # Returns the base graph i.e does not depend on the flow of interest, without prolongation nodes
 # A network is given as the proto structure
 def net2basegraph(net):
-    """A method that returns the base graph as a networkx graph object.
+    """
+    A method that returns the base graph as a networkx graph object.
     The nodes are given prefixes to indicate their types: servers, flows or prolongations, for visualization purposes
     :param net: the network considered (proto object)
     :return: the base graph of the form of networkx graph object, a dictionary of flow paths of the form flow_id: [servers]
