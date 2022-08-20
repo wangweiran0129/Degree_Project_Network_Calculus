@@ -1,9 +1,10 @@
-
+import sys
+sys.path.insert(0, "../")
 import pickle
 from scipy.sparse import coo_matrix
 import numpy as np
 from tqdm import tqdm
-from .gnn import *
+from model.gnn import *
 import random
 
 def train_model(model, train_graphs, train_targets, test_graphs, test_targets, learning_rate, epochs, dropout=0.2):
@@ -277,4 +278,22 @@ def prepare_adjacency_matrix(batch):
     return adj
 
 
+def main():
 
+    model = GGNN(9, 96, unrolls=2)
+    train_graphs_path = "/home/weirwang/serialized_dataset/train_graphs_pmoo.pickle"
+    train_targets_path = "/home/weirwang/serialized_dataset/train_targets_pmoo.pickle"
+    test_graphs_path = "/home/weirwang/serialized_dataset/test_graphs_pmoo.pickle"
+    test_targets_path = "/home/weirwang/serialized_dataset/test_targets_pmoo.pickle"
+
+    model, losses_per_epoch = train_model(model=model, train_graphs=train_graphs_path, train_targets=train_targets_path,\
+           test_graphs=test_graphs_path, test_targets=test_targets_path, learning_rate=1.4*5e-4, epochs=30)
+
+    print("model : ", model)
+    print("losses_per_epoch : ", losses_per_epoch)
+    
+    torch.save(model, "deepfpPMOO.pt")
+
+
+if __name__ == "__main__":
+    main()
