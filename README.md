@@ -52,7 +52,7 @@ For more information on Python environment, it is recommended to read the SCITAS
 
 For the writing of .sh script used for running the code on EPFL servers, please refer to one example [here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh).
 
-If the documentation of SCITAS website cannot be openned, please turn on the EPFL VPN. If there are more information about the server configuration, please contact the EPFL SCITAS service desk 1234@epfl.ch
+If the documentation of SCITAS website cannot be openned, please turn on the EPFL VPN. If more information about the server configuration are needed, please contact the EPFL SCITAS service desk 1234@epfl.ch
 
 ## Codes Description
 ### DeepFP_gnn-main
@@ -90,8 +90,9 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [data/large_network_generation/network_structure]$ Make
     ```
-2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please set up the NetCal.jar beforehand by ```java -jar NetCal.jar```. 
+2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. 
     ```
+    [data/large_network_generation]$ java -jar NetCal.jar
     [data/large_network_generation]$ python3 dataset_network_generation_pbz.py
     ```
     On IZAR server, run the script
@@ -114,4 +115,21 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> output]$ sbatch prediction_original_networks.sh
     ```
-5. 
+5. Find the potential attack targets. Given the input of ```prediction_<topo_id>.csv```, it will output two files for the potential attack targets (```potential_attack_target1.csv``` and ```potential_attack_target2.csv```) based on the two predition values of GNN.
+    ```
+    [analysis]$ python3 -m potential_attack_target "../../../Network_Information_and_Analysis/prediction_value/"
+    ```
+    On IZAR server, run the script
+    ```
+    [<account@izar> analysis]$ sbatch poatter.sh
+    ```
+
+## Disclaimer and Special Acknowledgement
+- Project Student: Weiran Wang (weiran.wang@epfl.ch/weiranw@kth.se)
+- Ph.D. Advisor: Tabatabaee Hossein (hossein.tabatabaee@epfl.ch)
+- Supervisor: Prof. Le boudec Jean-Yves (jean-yves.leboudec@epfl.ch)
+- Special Acknowledgement to:  
+    Hadidane Karim (karim.hadidane@epfl.ch)  
+    Bondorf Steffen (Bondorf.Steffen@ruhr-uni-bochum.de)  
+    Alexander Scheffler (Alexander.Scheffler@ruhr-uni-bochum.de)  
+    Etienne Orliac (etienne.orliac@epfl.ch)

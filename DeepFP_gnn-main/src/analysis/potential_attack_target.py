@@ -2,6 +2,7 @@
 # For any questions or problems, please contact the author of code at (weiran.wang@epfl.ch)
 
 import csv, os, re
+import argparse
 from collections import Counter
 
 def potential_attack_target_pred1(pred_file):
@@ -117,25 +118,25 @@ def potential_attack_target_pred2(pred_file):
     return potential_attack_target
 
 
-def main():
+if __name__ == "__main__":
 
-    main_path = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/"
+    p = argparse.ArgumentParser()
+    p.add_argument("pred_path")
+    args = p.parse_args()
 
-    pred_path = main_path + "Network_Information_and_Analysis/Prediction_Value/"
-
-    pred_files = os.listdir(pred_path)
+    pred_files = os.listdir(args.pred_path)
     if ".DS_Store" in pred_files:
         pred_files.remove(".DS_Store")
     pred_files.sort(key = lambda x: int(re.findall(r'\d+', x)[0]))
 
-    potential_attack_target1_csv = main_path + "Network_Information_and_Analysis/potential_attack_target1.csv"
-    potential_attack_target2_csv = main_path + "Network_Information_and_Analysis/potential_attack_target2.csv"
+    potential_attack_target1_csv = "../../../Network_Information_and_Analysis/potential_attack_target1.csv"
+    potential_attack_target2_csv = "../../../Network_Information_and_Analysis/potential_attack_target2.csv"
     count1 = 0
     count2 = 0
 
     for pred_file in pred_files:
 
-        potential_attack_target1 = potential_attack_target_pred1(pred_path + pred_file)
+        potential_attack_target1 = potential_attack_target_pred1(args.pred_path + pred_file)
         if len(potential_attack_target1) != 0:
             # The initial writing of this file
             if count1 == 0 :
@@ -153,7 +154,7 @@ def main():
                         pred1_csv.writerow([potential_attack_target1[i][0], potential_attack_target1[i][1]])
             count1 = count1 + 1
         
-        potential_attack_target2 = potential_attack_target_pred2(pred_path + pred_file)
+        potential_attack_target2 = potential_attack_target_pred2(args.pred_path + pred_file)
         print("potential attack target : ", potential_attack_target2)
         if len(potential_attack_target2) != 0:
             # The initial writing of this file
@@ -171,7 +172,3 @@ def main():
                     for i in range(len(potential_attack_target2)):
                         pred2_csv.writerow([potential_attack_target2[i][0], potential_attack_target2[i][1], potential_attack_target2[i][2]])
             count2 = count2 + 1
-
-
-if __name__ == "__main__":
-    main()
