@@ -14,8 +14,6 @@ echo Running on `hostname`
 
 source /home/weirwang/venvs/izar-python/bin/activate
 
-python large_network_generation_pbz.py
-
 java -jar NetCal.jar &
 MY_JAVA_PID=$!
 python large_network_generation_pbz.py
