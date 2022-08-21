@@ -12,38 +12,38 @@ The whole project is run on my Macbook Pro (Intel Chip) and the EPFL servers. It
 ## EPFL SCITAS Server Configuration
 Java is mainly used for NetCal/DNC. If there is no Java config. in your computer, please download it from the official website. Considering students are not the admins of EPFL servers, it is therefore a good idea to put Java configuration into a user-defined file under the home path, i.e., add the following three lines into the .bashrc file.
 ```
-$export JAVA_HOME=/home/<your_epfl_account>/jdk-16.0.2
-$export PATH=$JAVA_HOME/bin:$PATH
-$export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+$ export JAVA_HOME=/home/<your_epfl_account>/jdk-16.0.2
+$ export PATH=$JAVA_HOME/bin:$PATH
+$ export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
 ```
 Python is used for GNN training and the subsequent Adversarial Attack. It is highly recommended to use Python in a user-defined virtual environment on EPFL servers.
 
 To create a python virtual environemnt:  
 ```
-$virtualenv --system-site-packages venvs/<env_name>
+$ virtualenv --system-site-packages venvs/<env_name>
 ```
 
 To activate and use the virtual environment:  
 ```
-$source venvs/<env_name>/bin/activate
+$ source venvs/<env_name>/bin/activate
 ```
 
 Confirm python3 is the default python version instead of python2:  
 ```
-$module spider python
-$module spider python/<python_version>
-$module load gcc/<gcc_version> python/<python_version>
+$ module spider python
+$ module spider python/<python_version>
+$ module load gcc/<gcc_version> python/<python_version>
 ```
 
 Install the required python packages: [requirements.txt](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/requirements.txt). Please pay great attention to torch-related packages. There are several cuda versions available on the IZAR server. However, as far as to our test, ```cuda/10.2.89``` is the only one which meets all required dependencies for both PyTorch and PyG. Therefore, for torch-related packages installation on the server, please follow the steps:
 ```
-$module load cuda/10.2.89
-$pip3 install torch
-$python -c "import torch; print(torch.__version__)" # confirm the torch version
-$python -c "import torch; print(torch.version.cuda)" # confirt the cuda version
-$pip install torch-scatter -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
-$pip install torch-sparse -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
-$pip install torch-geometric
+$ module load cuda/10.2.89
+$ pip3 install torch
+$ python -c "import torch; print(torch.__version__)" # confirm the torch version
+$ python -c "import torch; print(torch.version.cuda)" # confirt the cuda version
+$ pip install torch-scatter -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
+$ pip install torch-sparse -f https://data.pyg.org/whl/torch-1.12.1+cu102.html
+$ pip install torch-geometric
 ```
 
 It is also worth mentioning that if you want to import ```torch_geometric```, please also import ```scipy``` at the same time.
@@ -86,10 +86,32 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
 4. ```python3 predict_model.py``` to use the trained model to predict the flow prolongations on a brand new network topology.
 
 ### Do the Adversarial Attack on the Network Topologies
-1. ```Make``` under the data/large_network_generation/network_structure folder if you cannot find the ```network_structure_pb2.py``` and ```network_strcture.descr```. This will compile and generate two necessary data structure files used for the creation of a new dataset. Furthermore, pmoo will be the main NetCal method used in the Adversarial Attack.
-2. ```python3 dataset_network_generation_pbz.py``` to generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please set up the NetCal.jar beforehand by ```java -jar NetCal.jar```. On IZAR server, run the script ```sbatch netgen.sh```
-3. ```python3 -m prepare_dataset_pmoo "<dataset-attack-large.pbz file path>"``` The input is the newly-created larger size dataset ```dataset-attack-large.pbz```, and will ouput two .pickle files: ```attack_graphs.pickle``` and ```attack_targets.pickle```.  
-On IZAR server, run the script ```pbz2pickle.sh```
-4. Please switch to src/output folder, ```python -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"``` This code will output two files. One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.  
-On IZAR server, run the script ```prediction_original_networks.sh```
+1. Compile under the data/large_network_generation/network_structure folder if you cannot find the ```network_structure_pb2.py``` and ```network_strcture.descr```. This will compile and generate two necessary data structure files used for the creation of a new dataset. Furthermore, pmoo will be the main NetCal method used in the Adversarial Attack.
+    ```
+    [data/large_network_generation/network_structure]$ Make
+    ```
+2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please set up the NetCal.jar beforehand by ```java -jar NetCal.jar```. 
+    ```
+    [data/large_network_generation]$ python3 dataset_network_generation_pbz.py
+    ```
+    On IZAR server, run the script
+    ```
+    [<account@izar> data/large_network_generation]$ sbatch netgen.sh
+    ```
+3. Transfer the pbz format file to .pickle format. The .pickle files are usually used as an input to the GNN model due to the matrix characteristic.
+    ```
+    [data]$ python3 -m prepare_dataset_pmoo "<dataset-attack-large.pbz file path>"
+    ```
+    On IZAR server, run the script 
+    ```
+    [<account@izar> data]$ sbatch pbz2pickle.sh
+    ```
+4. Make the prediction on the original topologies (The topologies before the attack and before the GNN prediction). This step will output two files: One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.
+    ```
+    [output]$ python -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"
+    ```
+    On IZAR server, run the script
+    ```
+    [<account@izar> output]$ sbatch prediction_original_networks.sh
+    ```
 5. 
