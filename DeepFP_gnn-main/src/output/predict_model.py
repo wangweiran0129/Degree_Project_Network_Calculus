@@ -68,7 +68,7 @@ def predict_network(network, foi_id, model, output_file="output.pbz"):
 
     write_network(network, start_sink_dict, foi_id, output_file)
 
-    return graph, out1, out2, start_sink_dict
+    return graph, out1, out2
 
 
 def predict_sink_sever(network, foi_id, model):

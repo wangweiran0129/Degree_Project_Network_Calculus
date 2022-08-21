@@ -52,6 +52,8 @@ For more information on Python environment, it is recommended to read the SCITAS
 
 For the writing of .sh script used for running the code on EPFL servers, please refer to one example [here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh).
 
+If the documentation of SCITAS website cannot be openned, please turn on the EPFL VPN. If there are more information about the server configuration, please contact the EPFL SCITAS service desk 1234@epfl.ch
+
 ## Codes Description
 ### DeepFP_gnn-main
 - [netcal_analysis.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/analysis/netcal_analysis.py) : Call the ```NetCal4Python.java``` to calculate the delay bound of a given topology (The topology is stored in a .pbz format).
@@ -84,8 +86,10 @@ For the writing of .sh script used for running the code on EPFL servers, please 
 4. ```python3 predict_model.py``` to use the trained model to predict the flow prolongations on a brand new network topology.
 
 ### Do the Adversarial Attack on the Network Topologies
-1. ```Make``` under the large_network folder if you cannot find the ```large_network.proto```. This will compile and generate two necessary data structure file used for the creation of a new dataset. Furthermore, pmoo will be the main NetCal method used in the Adversarial Attack.
-2. ```python3 dataset_network_generation_pbz.py``` to generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```.
-3. ```python3 prepare_dataset_pmoo.py``` The input is the newly-created larger size dataset ```dataset-attack-large.pbz```, and will ouput two .pickle files: ```attack_graphs.pickle``` and ```attack_targets.pickle```.
-4. ```python3 predict_multiple_networks.py``` The input is also the ```dataset-attack-large.pbz``` and will output two files. One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).
+1. ```Make``` under the data/large_network_generation/network_structure folder if you cannot find the ```network_structure_pb2.py``` and ```network_strcture.descr```. This will compile and generate two necessary data structure files used for the creation of a new dataset. Furthermore, pmoo will be the main NetCal method used in the Adversarial Attack.
+2. ```python3 dataset_network_generation_pbz.py``` to generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please set up the NetCal.jar beforehand by ```java -jar NetCal.jar```. On IZAR server, run the script ```sbatch netgen.sh```
+3. ```python3 -m prepare_dataset_pmoo "<dataset-attack-large.pbz file path>"``` The input is the newly-created larger size dataset ```dataset-attack-large.pbz```, and will ouput two .pickle files: ```attack_graphs.pickle``` and ```attack_targets.pickle```.  
+On IZAR server, run the script ```pbz2pickle.sh```
+4. Please switch to src/output folder, ```python -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"``` This code will output two files. One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.  
+On IZAR server, run the script ```prediction_original_networks.sh```
 5. 
