@@ -11,7 +11,6 @@ import pickle
 import argparse
 from scipy.sparse import coo_matrix
 
-
 # The inputs are the graph G, unique identifiers for each node, prolongation nodes if its for training
 def graph2torch_pmoo(G, node_ids):
     """
@@ -181,16 +180,10 @@ def prepare_dataset_pmoo(path, train, to_pickle=True):
     return graphs, targets
 
 
-def main():
-    dataset_address = "large_network_generation/dataset-attack-large.pbz"
-    prepare_dataset_pmoo(dataset_address, train=False)
-
-
 if __name__ == "__main__":
-    """
     p = argparse.ArgumentParser()
     p.add_argument("input")
     args = p.parse_args()
-    """
-    main()
+    dataset_address = args.input
+    prepare_dataset_pmoo(dataset_address, train=False)
 
