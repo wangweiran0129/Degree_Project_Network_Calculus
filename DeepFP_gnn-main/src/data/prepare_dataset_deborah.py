@@ -181,4 +181,3 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("input")
     args = p.parse_args()
-

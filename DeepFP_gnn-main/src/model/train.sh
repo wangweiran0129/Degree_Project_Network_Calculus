@@ -14,4 +14,4 @@ echo Running on `hostname`
 
 source /home/weirwang/venvs/izar-python/bin/activate
 
-python train_model.py
+python -m train_model "/home/weirwang/serialized_dataset/train_graphs_pmoo.pickle" "/home/weirwang/serialized_dataset/train_targets_pmoo.pickle" "/home/weirwang/serialized_dataset/test_graphs_pmoo.pickle" "/home/weirwang/serialized_dataset/test_targets_pmoo.pickle" 1.4*5e-4 30
