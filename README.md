@@ -3,7 +3,7 @@
 ## Environment and Prerequisites
 The whole project is run on my Macbook Pro (Intel Chip) and the EPFL servers. It's worth mentioning that for EPFL servers, only Izar supports NVIDIA GPUs for GNN model training and the adversarial attack.
 - IDE: Visual Studio Code
-- Python: 3.8.5
+- Python: 3.8.5 / 2.7.5(EPFL Server Python Version)
 - Java: 16.0.2
 - [NetCal/DNC](https://github.com/NetCal/DNC): v2.8.0
 - [IBM ILOG CPLEX Optimization Studio](https://www.ibm.com/docs/en/icos/20.1.0?topic=cplex-setting-up-gnulinuxmacos): 20.1.0 （This is used only for LUDB-FF calculation）
@@ -90,6 +90,7 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [data/large_network_generation/network_structure]$ Make
     ```
+
 2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. 
     ```
     [data/large_network_generation]$ java -jar NetCal.jar
@@ -99,6 +100,7 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> data/large_network_generation]$ sbatch netgen.sh
     ```
+
 3. Transfer the pbz format file to .pickle format. The .pickle files are usually used as an input to the GNN model due to the matrix characteristic.
     ```
     [data]$ python3 -m prepare_dataset_pmoo "<dataset-attack-large.pbz file path>"
@@ -107,6 +109,7 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> data]$ sbatch pbz2pickle.sh
     ```
+
 4. Make the prediction on the original topologies (The topologies before the attack and before the GNN prediction). This step will output two files: One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.
     ```
     [output]$ python -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"
@@ -115,21 +118,31 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> output]$ sbatch prediction_original_networks.sh
     ```
+
 5. Find the potential attack targets. Given the input of ```prediction_<topo_id>.csv```, it will output two files for the potential attack targets (```potential_attack_target1.csv``` and ```potential_attack_target2.csv```) based on the two predition values of GNN.
     ```
-    [analysis]$ python3 -m potential_attack_target "../../../Network_Information_and_Analysis/prediction_value/"
+    [analysis]$ python3 -m potential_attack_target "</prediction_value/ folder path>"
     ```
     On IZAR server, run the script
     ```
     [<account@izar> analysis]$ sbatch poatter.sh
     ```
 
+6. Use the [Fast Gradient Sign Method (FGSM)](https://pytorch.org/tutorials/beginner/fgsm_tutorial.html) to do the adversarial attack on the network features. It will output the topologies after the attack (.pbz) into ```Network_Information_and_Analysis/attacked_topology/before_fp``` folder. Besides, PMOO delay bounds will also be calculated for the network after the attack, so please set on the NetCal.jar
+    ```
+    [analysis]$ python -m adversarial_attack "<model path>" "<potential attack target path (the .csv file)>" "<dataset-attack-large.pbz file path>" "<attack_graphs.pickle file path>" "<attack_targets.pickle file path>"
+    ````
+    On IZAR server, run the script
+    ```
+    [<account@izar> analysis]$ sbatch fgsm.sh
+    ```
+
 ## Disclaimer and Special Acknowledgement
 - Project Student: Weiran Wang (weiran.wang@epfl.ch/weiranw@kth.se)
 - Ph.D. Advisor: Tabatabaee Hossein (hossein.tabatabaee@epfl.ch)
-- Supervisor: Prof. Le boudec Jean-Yves (jean-yves.leboudec@epfl.ch)
-- Special Acknowledgement to:  
-    Hadidane Karim (karim.hadidane@epfl.ch)  
+- Supervisor: Prof. Le Boudec Jean-Yves (jean-yves.leboudec@epfl.ch)
+- Special Acknowledgement to:   
     Bondorf Steffen (Bondorf.Steffen@ruhr-uni-bochum.de)  
     Alexander Scheffler (Alexander.Scheffler@ruhr-uni-bochum.de)  
-    Etienne Orliac (etienne.orliac@epfl.ch)
+    Etienne Orliac (etienne.orliac@epfl.ch)  
+    Hadidane Karim (karim.hadidane@epfl.ch) 

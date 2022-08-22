@@ -1,18 +1,17 @@
 # This code is written by Weiran Wang
 # For any questions or problems, please contact the author of code at (weiran.wang@epfl.ch)
 
+
+import pickle, csv
+import torch
+import argparse
 import sys
 sys.path.insert(0, "../")
-import pickle
-import torch
-import csv
-from pbzlib import write_pbz, open_pbz
+from pbzlib import open_pbz
 from model.train_model import *
 from output.write_attacked_network import *
 from data.prepare_dataset_deborah import *
 from data.prepare_dataset_pmoo import *
-
-torch.set_printoptions(profile="full")
 
 
 def fgsm_update(feature_matrix, feature_matrix_grad, eps, flow_rate):
@@ -30,7 +29,7 @@ def fgsm_update(feature_matrix, feature_matrix_grad, eps, flow_rate):
     sign_feature_matrix_grad = feature_matrix_grad.sign()
 
     if flow_rate == True:
-        eps = eps / 40
+        eps = eps / 100
 
     # Create the perturbed features
     perturbed_feature_matrix = feature_matrix + eps * sign_feature_matrix_grad
@@ -41,27 +40,26 @@ def fgsm_update(feature_matrix, feature_matrix_grad, eps, flow_rate):
     return perturbed_feature_matrix
 
 
-def evaluate_attack(model, device, potential_attack_target_topology_id):
+def evaluate_attack(model, device, potential_attack_target_topology_id, attack_dataset, attack_graphs_path, attack_targets_path):
     """
     Evaluate the attack perfomance with different eps values
     Output the pbz file after the attack
     :param model: the pre-trained pmoo or ludb model
     :param device: cpu or gpu
     :param potential_attack_target_topology_id: the topology id where attack might happen
+    :param attack_dataset: the dataset network topo created for the adversarial attack purpose (.pbz format)
+    :param attack_graphs_path: the matrices storing the network features information (.pickle format)
+    :param attack_targets_path: the matrices stroing the FP/targets information (.pickle format)
     """
 
+    print("device : ", device)
+
     # Define the epsilon
-    update_max_norm = [0.0002, 0.0004, 0.0006, 0.0008, 0.001, 0.0012, 0.0014, 0.0016, 0.0018, 0.002]
-    
-    main_path = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/"
-    attack_dataset = "Network_Information_and_Analysis/Original_Topology/before_fp/dataset-attack-large.pbz"
+    update_max_norm = [0.0001, 0.0005, 0.001, 0.002, 0.0025, 0.003, 0.004, 0.005]
 
     for eps in update_max_norm:
 
         # Load the dataset
-        attack_graphs_path = main_path + "Network_Information_and_Analysis/Original_Topology/before_fp/attack_graphs.pickle"
-        attack_targets_path = main_path + "Network_Information_and_Analysis/Original_Topology/before_fp/attack_targets.pickle"
-        
         outfile = open(attack_graphs_path, 'rb')
         attack_graphs = pickle.load(outfile)
         outfile.close()
@@ -90,7 +88,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
             flow_feature = graph.x[flow_index_start_index:flow_index_end_index+1, 6:8]
 
             # Confirm and get the network topology id
-            for original_network in open_pbz(main_path + attack_dataset):
+            for original_network in open_pbz(attack_dataset):
                 if original_network.server[0].rate == graph.x[0][4] and original_network.server[0].latency == graph.x[0][5]:
                     topology_id = original_network.id
                     break
@@ -102,12 +100,15 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
                 # Create adjacency matrix
                 adjacency = prepare_adjacency_matrix(graph)
 
+                # Make sure the tensors is in GPU/CPU to avoid the problem of leaf nodes
+                graph, adjacency = graph.to(device), adjacency.to(device)
+
                 # Indicate that we want PyTorch to compute a gradient with respect to the input batch
                 graph.x.requires_grad = True
 
                 # Feed forward pass
                 # original model feed forward
-                pred1, pred2 = model(graph.to(device), adjacency.to(device))
+                pred1, pred2 = model(graph, adjacency)
 
                 # Identify nodes of flow of interests
                 foi_idx = torch.where(graph.x[:, 2])[0]
@@ -151,6 +152,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
                 max_flow_burst = graph.x[len(server_feature):len(server_feature)+len(flow_feature), 7].max()
 
                 # Attack the whole graph excapt for the flow rate
+                # graph.x.retain_grad()
                 perturbed_graph_feature = fgsm_update(graph.x, graph.x.grad, eps, flow_rate = False)
                 
                 # Recover the original value for the server rate and latency
@@ -172,6 +174,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
                 
                 # Attack the whole graph for the flow rate
                 perturbed_graph_feature_flow_rate = fgsm_update(graph.x, graph.x.grad, eps, flow_rate = True)
+                
                 # Update the attacked flow rates
                 x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6] = perturbed_graph_feature_flow_rate[len(server_feature):len(server_feature)+len(flow_feature), 6]
                 # Replace 0 with the minimum value
@@ -180,11 +183,11 @@ def evaluate_attack(model, device, potential_attack_target_topology_id):
                 x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6] = torch.where(x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6]==1, max_flow_rate, x_hat[len(server_feature):len(server_feature)+len(flow_feature), 6])
 
                 # Write the changes to a new .pbz file
-                attacked_network_path = main_path + "Network_Information_and_Analysis/Attacked_Topology/Before_FP/"
+                attacked_network_path = "../../../Network_Information_and_Analysis/attacked_topology/before_fp/"
                 attacked_file_name = "attacked_" + str(eps) + "_" +str(topology_id) + "_" + str(foi) + ".pbz"
                 print("attacked network file name : ", attacked_network_path + attacked_file_name)
                 write_attacked_network(original_network, x_hat, foi, attacked_network_path+attacked_file_name)
-            
+
             else:
                 continue
 
@@ -214,20 +217,32 @@ def get_potential_attack_topology_id(potential_attack_file):
     return topology_id
 
 
-def main():
+if __name__ == "__main__":
 
-    main_path = "/Users/wangweiran/Desktop/MasterDegreeProject/Degree_Project_Network_Calculus/"
-    potential_attack_file = main_path + "Network_Information_and_Analysis/potential_attack_target2.csv"
+    p = argparse.ArgumentParser()
+    p.add_argument("model")
+    p.add_argument("potential_attack_file_path")
+    p.add_argument("attack_dataset")
+    p.add_argument("attack_graphs_path")
+    p.add_argument("attack_targets_path")
+    args = p.parse_args()
 
     # Load the pretrained model
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = torch.load(main_path + "DeepFP_gnn-main/src/model/ggnn_pmoo.pt", map_location=torch.device(device))
-    potential_attack_target_topology_id = get_potential_attack_topology_id(potential_attack_file)
-    print("potential attack target topology id : ", potential_attack_target_topology_id)
+    print("device : ", device)
+    model = torch.load(args.model, map_location=torch.device(device))
+    model.eval()
+    print("model : ", model)
+
+    # Import the potential attack target network.id
+    potential_attack_target_topology_id = get_potential_attack_topology_id(args.potential_attack_file_path)
+
+    attack_dataset = args.attack_dataset
+    attack_graphs_path = args.attack_graphs_path
+    attack_targets_path = args.attack_targets_path
+
+    print("# attack graphs : ", len(attack_graphs_path))
+    print("# attack targets : ", len(attack_targets_path))
 
     # Do the adversarial attack
-    evaluate_attack(model, device, potential_attack_target_topology_id)
-
-
-if __name__ == "__main__":
-    main()
+    evaluate_attack(model, device, potential_attack_target_topology_id, attack_dataset, attack_graphs_path, attack_targets_path)
