@@ -58,18 +58,18 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
 ### DeepFP_gnn-main
 - [netcal_analysis.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/analysis/netcal_analysis.py) : Call the ```NetCal4Python.java``` to calculate the delay bound of a given topology (The topology is stored in a .pbz format).
 - [potential_attack_target.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/analysis/potential_attack_target.py) :  Find the potential attack target(s) based on the two prediction values of GNN. For the first prediction value, it is mainly based on the flow of interest, and tells whether other flows of this topology are worth prolonging (the criteria value is 0.5). For the second prediction values, they are based on the possibile prolonging flows whose criteria is the highest values.
+- [adversarial_attack.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/adversarial_attack.py) : The adversarial attack using the FGSM to change the server rate, server latency, flow rate and flow burst.
 - [graph_transformer.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/graph_transformer.py) : Transform a human reading-friendly graph to a GNN-based recognized graph.
 - [prepare_dataset_pmoo.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/prepare_dataset_pmoo.py) :  Transform .pbz format dataset to a .pickle format dataset based on the NetCal method pmoo. The .pickle format dataset is based on matrices and will be used for the trainning of GNN and the FGSM adversarial attack. One graph.pickle file is the network feature matrices, and anther target.pickle file is the correct flow prolongation matrices.
 - [prepare_dataset_deborah.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/prepare_dataset_deborah.py) : Same above while the NetCal method is changed to deborah.
 - [large_network_generation_pbz.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/large_network_generation_pbz.py): Generate a large-scale network dataset for adversarial attack, i.e., the number of servers and flows are large.
 - [large_network.proto](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/large_network/large_network.proto): Define the dataset structure for large-scale network. It is mainly used by ```large_network_generation_pbz.py```.
 - [large_network.descr](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/large_network/large_network.descr) and [large_network_pb2.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/large_network/large_network_pb2.py): A systematic generated file after compilation from ```large_network.proto```. The following read and write opeartions on large network dataset structure will mainly based on these two.
-- [netgen.sh](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh) : A script needed for the EPFL server. This script is for the large-scale network dataset generation. For running operations on other codes, please change the correspoding content in this script.
-- [adversarial_attack.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/adversarial_attack.py) : The adversarial attack using the FGSM to change the server rate, server latency, flow rate and flow burst.
-- [ggnn_pmoo.pt](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/ggnn_pmoo.pt) : A pre-trained GNN model based on pmoo NetCal method. You are also welcomed to train the model on your own.
+- [ggnn_pmoo.pt](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/ggnn_pmoo.pt) : A pre-trained GNN model based on PMOO NetCal method. You are also welcomed to train the model on your own. It is trained on CPU.
+- [deepfpPMOO.pt] The same GNN model based on the PMOO NetCal method. It is trained on GPU. As far as I know, a CPU trained model cannot be loaded on a GPU machine, and vice versa.
 - [gnn.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/gnn.py) : Define the neural network structure of GNN.
 - [train_model.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/train_model.py) : The process of training the GNN model, and evaluation of the model accuracy.
-- [predict_multiple_networks.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/model/predict_multiple_networks.py) : Predict the flow prolongation by using the ```ggnn_pmoo.pt``` model. The prediction can be done for the topologies before/after the adversarial attack. This code highly depends on the ```predict_model.py```.
+- [predict_original_model.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/output/predict_original_networks.py) : Predict the flow prolongation by using the GNN model for a new network topology. The prediction can be done for the topologies before/after the adversarial attack. This code highly depends on the ```predict_model.py```.
 - [network_writer.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/output/network_writer.py) : Plot the network topology stored in .pbz.
 - [predict_model.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/output/predict_model.py) : Use the pre-trained GNN model to predict the flow prolongation on a new network topology configuration, and store the result in a .pbz format.
 - [write_attacked_network.py](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/output/write_attacked_network.py) : Write the network after the adversarial attack into a .pbz file according to the attack.descr description and also calculate the delay bound for this network.
@@ -81,16 +81,34 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
 ## Reproduction and Usage Specification
 ### Train the GNN Model
 1. Please download the dataset by followoing the this [link](https://github.com/fabgeyer/dataset-rtas2021).
-2. ```python3 prepare_dataset_deborah.py``` or ```python3 prepare_dataset_pmoo.py``` depending on the Network Calculus method. It will change the dataset stored in .pbz format to a .pickle format where network topologies are changed to network matrices.
-3. ```python3 train_model.py``` to train the model.
-4. ```python3 predict_model.py``` to use the trained model to predict the flow prolongations on a brand new network topology.
+2. Depending on the Network Calculus methods, choose the corresponding method python file. It will change the dataset stored in .pbz format to a .pickle format where network topologies are changed to network matrices. The matrices will then be used for the trainning process of the model/
+
+    For the pickle files used for training:
+    ```
+    [data]$ python3 -m prepare_dataset_pmoo/deborah "<dataset-train.pbz file path>" "True"
+    ```
+    For the pickle files used for testing:
+    ```
+    [data]$ python3 -m prepare_dataset_pmoo/deborah "<dataset-evaluation.pbz file path>" "False"
+    ```
+3. Train the model:
+    ```
+    [model]$ python3 -m train_model "<train_graphs_pmoo.pickle file path>" "<train_targets_pmoo.pickle file path>" "<test_graphs_pmoo.pickle file path>" "<test_targets_pmoo.pickle file path>" <learning rate> <epoch number>
+    ```
+    On IZAR server, run the script:
+    ```
+    [<account@izar> model]$ sbatch train.sh
+    ```
+4. Use the trained model to predict the flow prolongations on a brand new network topology.
+    ```
+    [output]$ python3 -m predict_network <new network topology>, <foi id>, <pre-trained model>, <output file name>)
+    ```
 
 ### Do the Adversarial Attack on the Network Topologies
 1. Compile under the data/large_network_generation/network_structure folder if you cannot find the ```network_structure_pb2.py``` and ```network_strcture.descr```. This will compile and generate two necessary data structure files used for the creation of a new dataset. Furthermore, pmoo will be the main NetCal method used in the Adversarial Attack.
     ```
     [data/large_network_generation/network_structure]$ Make
     ```
-
 2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. 
     ```
     [data/large_network_generation]$ java -jar NetCal.jar
@@ -100,7 +118,6 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> data/large_network_generation]$ sbatch netgen.sh
     ```
-
 3. Transfer the pbz format file to .pickle format. The .pickle files are usually used as an input to the GNN model due to the matrix characteristic.
     ```
     [data]$ python3 -m prepare_dataset_pmoo "<dataset-attack-large.pbz file path>"
@@ -109,7 +126,6 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> data]$ sbatch pbz2pickle.sh
     ```
-
 4. Make the prediction on the original topologies (The topologies before the attack and before the GNN prediction). This step will output two files: One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.
     ```
     [output]$ python -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"
@@ -118,7 +134,6 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> output]$ sbatch prediction_original_networks.sh
     ```
-
 5. Find the potential attack targets. Given the input of ```prediction_<topo_id>.csv```, it will output two files for the potential attack targets (```potential_attack_target1.csv``` and ```potential_attack_target2.csv```) based on the two predition values of GNN.
     ```
     [analysis]$ python3 -m potential_attack_target "</prediction_value/ folder path>"
@@ -127,7 +142,6 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [<account@izar> analysis]$ sbatch poatter.sh
     ```
-
 6. Use the [Fast Gradient Sign Method (FGSM)](https://pytorch.org/tutorials/beginner/fgsm_tutorial.html) to do the adversarial attack on the network features. It will output the topologies after the attack (.pbz) into ```Network_Information_and_Analysis/attacked_topology/before_fp``` folder. Besides, PMOO delay bounds will also be calculated for the network after the attack, so please set on the NetCal.jar
     ```
     [analysis]$ python -m adversarial_attack "<model path>" "<potential attack target path (the .csv file)>" "<dataset-attack-large.pbz file path>" "<attack_graphs.pickle file path>" "<attack_targets.pickle file path>"
@@ -138,7 +152,7 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
 
 ## Disclaimer and Special Acknowledgement
-- Project Student: Weiran Wang (weiran.wang@epfl.ch/weiranw@kth.se)
+- Project Student: Weiran Wang (weiran.wang@epfl.ch / weiranw@kth.se)
 - Ph.D. Advisor: Tabatabaee Hossein (hossein.tabatabaee@epfl.ch)
 - Supervisor: Prof. Le Boudec Jean-Yves (jean-yves.leboudec@epfl.ch)
 - Special Acknowledgement to:   
