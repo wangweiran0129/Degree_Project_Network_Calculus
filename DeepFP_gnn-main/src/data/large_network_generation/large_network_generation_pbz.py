@@ -238,8 +238,8 @@ def large_network_gnn_prediction(num_topo, model):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(20, 30)
-        num_flow = random.randint(200, 300)
+        num_server = random.randint(20, 33)
+        num_flow = int((num_server+1)*num_server/5)
 
         # To simplify the calculation in the adversearial attack process
         # There will be only one foi in each topology
@@ -253,6 +253,30 @@ def large_network_gnn_prediction(num_topo, model):
             server.id = i
             server.rate = random.uniform(0.05, 1)
             server.latency = random.uniform(0.01, 1)
+
+        # Clarify the path for the foi
+        foi_start_server = random.randint(0, 3)
+        foi_sink_server = num_server - 1
+
+        # Try to find all the possible flows so as to confirm that there are no redundant flows in the topology
+        all_possible_flows = collections.defaultdict(list)
+        fid = 0
+        for s_src in range(num_server):
+            for s_dest in range(s_src, num_server):
+                # Make sure the rest flows' paths are not the same with the foi's path
+                if s_src != foi_sink_server or s_dest != foi_sink_server:
+                    if s_src != s_dest:
+                        all_possible_flows[fid].append(s_src)
+                        all_possible_flows[fid].append(s_dest)
+                    else:
+                        all_possible_flows[fid].append(s_src)
+                    fid = fid + 1
+        
+        print(len(all_possible_flows))
+
+        # Randomly pick up some flows from the all_possible_flows list
+        selected_flows = random.sample(all_possible_flows.keys(), num_flow)
+        selected_flow_index = 0
         
         # Add flow information
         for i in range(num_flow):
@@ -263,11 +287,12 @@ def large_network_gnn_prediction(num_topo, model):
 
             # I want the foi to cross nearly the whole topology due to the NetCal characteristics
             if flow.id == foi:
-                flow_src = random.randint(0, 5)
-                flow_dest = num_server-1
+                flow_src = foi_start_server
+                flow_dest = foi_sink_server
             else:
-                flow_src = random.randint(0, num_server-1)
-                flow_dest = random.randint(flow_src, num_server-1)
+                flow_src = all_possible_flows[selected_flows[selected_flow_index]][0]
+                flow_dest = all_possible_flows[selected_flows[selected_flow_index]][-1]
+                selected_flow_index = selected_flow_index + 1
 
             # Add servers to the flow path
             if flow_src == flow_dest:
@@ -344,7 +369,7 @@ def large_network_gnn_prediction(num_topo, model):
             flow_dest_java[f.id] = f.path[-1]
 
         # Print some key parameters in this topology
-        print("# server : ", num_server)
+        print("# real server : ", num_server)
         print("# flow : ", num_flow)
         print("foi : ", foi, ", foi path : ", objs[topo_id].flow[foi].path[0], "->", objs[topo_id].flow[foi].path[-1])
 
@@ -365,7 +390,7 @@ def large_network_gnn_prediction(num_topo, model):
         for fid in range(num_flow):
             flow_prolonged_dest_java[fid] = flow_dest_java[fid]
 
-        # Add the pmoofp block
+        # Add the pmoofp code block
         objs[topo_id].flow[foi].pmoofp.explored_combination.add()
         # Change the sink servers
         for f in start_sink_dict:
@@ -388,14 +413,12 @@ def large_network_gnn_prediction(num_topo, model):
             w.write(obj)
 
 
-def main():
-
-    model = torch.load("../../model/deepfpPMOO.pt")
-    large_network_gnn_prediction(1000, model)
-
-    # large_network_random_search(2)
-
-
-
 if __name__ == "__main__":
-    main()
+
+    p = argparse.ArgumentParser()
+    p.add_argument("num_topo")
+    p.add_argument("model")
+    args = p.parse_args()
+
+    model = torch.load(args.model)
+    large_network_gnn_prediction(int(args.num_topo), model)
