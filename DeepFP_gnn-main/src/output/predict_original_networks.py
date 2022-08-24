@@ -4,7 +4,7 @@
 import torch
 import csv
 import argparse
-import tqdm
+from tqdm import tqdm
 import sys
 sys.path.append("../")
 from output.predict_model import *
