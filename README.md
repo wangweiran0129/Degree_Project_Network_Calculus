@@ -50,9 +50,9 @@ It is also worth mentioning that if you want to import ```torch_geometric```, pl
 
 For more information on Python environment, it is recommended to read the SCITAS Documentation on [Python Virtual Environment](https://scitas-data.epfl.ch/confluence/display/DOC/Python+Virtual+Environments).
 
-For the writing of .sh script used for running the code on EPFL servers, please refer to one example [here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh).
+For the writing of .sh script used for running the code on EPFL servers, please refer to [First steps on the clusters](https://scitas-data.epfl.ch/confluence/display/DOC/First+steps+on+the+clusters). [Here](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/DeepFP_gnn-main/src/data/large_network_generation/netgen.sh) is also one example.
 
-If the documentation of SCITAS website cannot be openned, please turn on the EPFL VPN. If more information about the server configuration are needed, please contact the EPFL SCITAS service desk 1234@epfl.ch
+If the documentation of SCITAS website cannot be openned, please turn on the EPFL VPN. If more information about the server configuration is needed, please contact the EPFL SCITAS service desk 1234@epfl.ch
 
 ## Codes Description
 ### DeepFP_gnn-main
@@ -80,6 +80,20 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
  - [NetCal.jar](https://github.com/wangweiran0129/Degree_Project_Network_Calculus/blob/master/NetCal.jar) : The .jar of this NetCal/DNC repo, for the convenience of running the NetCal/DNC on the EPFL server by command ```java -jar NetCal.jar```.
 
 ## Reproduction and Usage Specification
+For the storage of analysis, it is highly recommended to create a directory for the result analysis like this:
+```
+.
+|-- DeepFP_gnn-main
+|-- DNC
+└-- Network_Information_and_Analysis
+    └-- attacked_topology
+    |   |-- after_fp
+    |   └-- before_fp
+    |-- original_topology
+    |   |-- after_fp
+    |   └-- before_fp
+    └-- prediction_value
+```
 ### Train the GNN Model
 1. Please download the dataset by followoing the this [link](https://github.com/fabgeyer/dataset-rtas2021).
 2. Depending on the Network Calculus methods, choose the corresponding method python file. It will change the dataset stored in .pbz format to a .pickle format where network topologies are changed to network matrices. The matrices will then be used for the trainning process of the model/
@@ -110,10 +124,10 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
     [data/large_network_generation/network_structure]$ Make
     ```
-2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. 
+2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. There is also a ```temp4pred.pbz``` file in this folder, but ignore it. This is just an intermediate .pbz file for the proloned flow PMOO delay bound calculation.
     ```
     [data/large_network_generation]$ java -jar NetCal.jar
-    [data/large_network_generation]$ python3 dataset_network_generation_pbz.py
+    [data/large_network_generation]$ python3 -m dataset_network_generation_pbz <# topology> <deepfpPMOO.pt/ggnn_pmoo.pt model path>
     ```
     On IZAR server, run the script
     ```
@@ -129,7 +143,7 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
     ```
 4. Make the prediction on the original topologies (The topologies before the attack and before the GNN prediction). This step will output two files: One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.
     ```
-    [output]$ python -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"
+    [output]$ python3 -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"
     ```
     On IZAR server, run the script
     ```
@@ -165,7 +179,6 @@ If the documentation of SCITAS website cannot be openned, please turn on the EPF
 - Ph.D. Advisor: Tabatabaee Hossein (hossein.tabatabaee@epfl.ch)
 - Supervisor: Prof. Le Boudec Jean-Yves (jean-yves.leboudec@epfl.ch)
 - Special Acknowledgement to:   
-    Bondorf Steffen (Bondorf.Steffen@ruhr-uni-bochum.de)  
-    Alexander Scheffler (Alexander.Scheffler@ruhr-uni-bochum.de)  
-    Etienne Orliac (etienne.orliac@epfl.ch)  
-    Hadidane Karim (karim.hadidane@epfl.ch) 
+    - Bondorf Steffen (Bondorf.Steffen@ruhr-uni-bochum.de) and Alexander Scheffler (Alexander.Scheffler@ruhr-uni-bochum.de) for the support of the usage of NetCal/DNC tool.
+    - Etienne Orliac (etienne.orliac@epfl.ch) for the support of the configuration of torch enviroment on EPFL IZAR cluster.
+    - Hadidane Karim (karim.hadidane@epfl.ch) for the support of the implementation of GNN reproduction.
