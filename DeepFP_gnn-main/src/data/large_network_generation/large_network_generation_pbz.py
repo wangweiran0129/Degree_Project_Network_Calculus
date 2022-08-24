@@ -36,8 +36,8 @@ def large_network_random_search(num_topo):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(30, 40)
-        num_flow = random.randint(300, 400)
+        num_server = random.randint(20, 33)
+        num_flow = int((num_server+1)*num_server/5)
 
         # To simplify the calculation in the adverseari attack process
         # There will be only one foi in each topology
@@ -52,20 +52,46 @@ def large_network_random_search(num_topo):
             server.rate = random.uniform(0.05, 1)
             server.latency = random.uniform(0.01, 1)
         
+        # Clarify the path for the foi
+        foi_start_server = random.randint(0, 3)
+        foi_sink_server = num_server - 1
+
+        # Try to find all the possible flows so as to confirm that there are no redundant flows in the topology
+        all_possible_flows = collections.defaultdict(list)
+        fid = 0
+        for s_src in range(num_server):
+            for s_dest in range(s_src, num_server):
+                # Make sure the rest flows' paths are not the same with the foi's path
+                if s_src != foi_sink_server or s_dest != foi_sink_server:
+                    if s_src != s_dest:
+                        all_possible_flows[fid].append(s_src)
+                        all_possible_flows[fid].append(s_dest)
+                    else:
+                        all_possible_flows[fid].append(s_src)
+                    fid = fid + 1
+        
+        print(len(all_possible_flows))
+
+        # Randomly pick up some flows from the all_possible_flows list
+        selected_flows = random.sample(all_possible_flows.keys(), num_flow)
+        selected_flow_index = 0
+
         # Add flow information
         for i in range(num_flow):
             flow = objs[topo_id].flow.add()
             flow.id = i
-            flow.rate = random.uniform(0.00001, 0.00005)
+            flow.rate = random.uniform(0.0001, 0.0005)
             flow.burst = random.uniform(0.01, 1)
 
             # I want the foi to cross nearly the whole topology due to the NetCal characteristics
+            # I want the foi to cross nearly the whole topology due to the NetCal characteristics
             if flow.id == foi:
-                flow_src = random.randint(0, 5)
-                flow_dest = num_server-1
+                flow_src = foi_start_server
+                flow_dest = foi_sink_server
             else:
-                flow_src = random.randint(0, num_server-1)
-                flow_dest = random.randint(flow_src, num_server-1)
+                flow_src = all_possible_flows[selected_flows[selected_flow_index]][0]
+                flow_dest = all_possible_flows[selected_flows[selected_flow_index]][-1]
+                selected_flow_index = selected_flow_index + 1
 
             # Add servers to the flow path
             if flow_src == flow_dest:
@@ -194,7 +220,6 @@ def large_network_random_search(num_topo):
                 objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].delay_bound = delay_bound_after_prolongation
                 real_num_explore_combination = real_num_explore_combination + 1
                 print("BINGO! One tigher delay bound is found!")
-                print("Iteration : ", i)
                 print("# real explore combination : ", real_num_explore_combination)
         
         # The pmoofp.delay_bound is the tightest value among all the explored combinations
@@ -238,6 +263,7 @@ def large_network_gnn_prediction(num_topo, model):
 
         print("----- topo id : ", topo_id, " -----")
 
+        # This combination is the largest in number in terms of GPU memory capacity
         num_server = random.randint(20, 33)
         num_flow = int((num_server+1)*num_server/5)
 
@@ -282,7 +308,7 @@ def large_network_gnn_prediction(num_topo, model):
         for i in range(num_flow):
             flow = objs[topo_id].flow.add()
             flow.id = i
-            flow.rate = random.uniform(0.00001, 0.00005)
+            flow.rate = random.uniform(0.0001, 0.0005)
             flow.burst = random.uniform(0.01, 1)
 
             # I want the foi to cross nearly the whole topology due to the NetCal characteristics
@@ -416,6 +442,7 @@ def large_network_gnn_prediction(num_topo, model):
 if __name__ == "__main__":
 
     p = argparse.ArgumentParser()
+    p.add_argument("num_server")
     p.add_argument("num_topo")
     p.add_argument("model")
     args = p.parse_args()
