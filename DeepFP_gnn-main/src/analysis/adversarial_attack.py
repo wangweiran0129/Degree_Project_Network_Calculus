@@ -55,7 +55,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
     print("device : ", device)
 
     # Define the epsilon
-    update_max_norm = [0.0001, 0.0005, 0.001, 0.002, 0.0025, 0.003, 0.004, 0.005]
+    update_max_norm = [0.0001, 0.0005, 0.001, 0.0015, 0.002, 0.0025, 0.003, 0.004, 0.005]
 
     for eps in update_max_norm:
 
@@ -92,10 +92,10 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
                 if original_network.server[0].rate == graph.x[0][4] and original_network.server[0].latency == graph.x[0][5]:
                     topology_id = original_network.id
                     break
-            
-            print("----- topology id : ", topology_id, " -----")
 
             if topology_id in potential_attack_target_topology_id:
+
+                print("----- topology id : ", topology_id, " -----")
             
                 # Create adjacency matrix
                 adjacency = prepare_adjacency_matrix(graph)
@@ -137,7 +137,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
                 # Zero all existing gradient
                 min_loss = losses[np.argmin(list(map(lambda x: x.item(), losses)))]
                 model.zero_grad()
-                min_loss.backward()
+                min_loss.backward() # The code can't calculate the backward(), I have no idea why this happened!
 
                 # Find the min/max server rate and server latency
                 min_server_rate = graph.x[0:len(server_feature), 4].min()
@@ -150,6 +150,8 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
                 min_flow_burst = graph.x[len(server_feature):len(server_feature)+len(flow_feature), 7].min()
                 max_flow_rate = graph.x[len(server_feature):len(server_feature)+len(flow_feature), 6].max()
                 max_flow_burst = graph.x[len(server_feature):len(server_feature)+len(flow_feature), 7].max()
+
+                # The code doesn't come to here
 
                 # Attack the whole graph excapt for the flow rate
                 # graph.x.retain_grad()
