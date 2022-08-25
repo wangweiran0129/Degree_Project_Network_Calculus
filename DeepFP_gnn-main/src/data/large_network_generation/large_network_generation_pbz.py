@@ -84,7 +84,6 @@ def large_network_random_search(num_topo):
             flow.burst = random.uniform(0.01, 1)
 
             # I want the foi to cross nearly the whole topology due to the NetCal characteristics
-            # I want the foi to cross nearly the whole topology due to the NetCal characteristics
             if flow.id == foi:
                 flow_src = foi_start_server
                 flow_dest = foi_sink_server
@@ -442,7 +441,6 @@ def large_network_gnn_prediction(num_topo, model):
 if __name__ == "__main__":
 
     p = argparse.ArgumentParser()
-    p.add_argument("num_server")
     p.add_argument("num_topo")
     p.add_argument("model")
     args = p.parse_args()
