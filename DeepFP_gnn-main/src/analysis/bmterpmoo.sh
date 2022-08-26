@@ -16,6 +16,6 @@ source /home/weirwang/venvs/izar-python/bin/activate
 
 java -jar NetCal.jar &
 MY_JAVA_PID=$!
-python -m benchmark_tighter_pmoofp "../../../Network_Information_and_Analysis/original_topology/before_fp/dataset-attack-large.pbz"
+python -m benchmark_tighter_pmoofp
 kill $MY_JAVA_PID
 exit 0

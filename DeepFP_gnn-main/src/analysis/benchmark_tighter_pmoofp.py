@@ -38,11 +38,11 @@ def ex4tighterpmoofp():
     execution_time = []
     topo_id = 0
 
-    for round in tqdm(range(2)):
+    for round in tqdm(range(5)):
 
-        num_servers = np.arange(10, 12)
+        print("round : ", round)
         
-        for num_server in num_servers:
+        for num_server in range(10, 31):
 
             num_flow = int((num_server+1)*num_server/4)
 
@@ -186,12 +186,15 @@ def ex4tighterpmoofp():
             real_num_explore_combination = 0
             print("# explored combination ", num_explore_combination, "\n")
 
+            flow_list = [i for i in range(num_flow)]
+            flow_list.remove(foi)
+
+            # Now we begin to find the tighter delay bound by exhaustive search and calculate the time
+            start = time.time()
+
             for i in range(num_explore_combination):
 
-                # Now we begin to calculate the time
-                start = time.time()
-
-                flow_to_be_prolonged = random.sample(num_flow, random.randint(1, num_flow-1))
+                flow_to_be_prolonged = random.sample(flow_list, random.randint(1, num_flow-1))
                 flow_to_be_prolonged.sort()
 
                 # Backup the original flow destination servers
@@ -218,13 +221,12 @@ def ex4tighterpmoofp():
                     print("We found a tighter delay bound at the iteration ", i)
                     
                     # Since we found a tighter delay bound, the time calculated will be stop
-                    end = time.time()
-                    exe_time = end - start
-                    execution_time.append(exe_time)
-                    print("execution time : ", exe_time)
-                    
                     break
             
+            end = time.time()
+            exe_time = end - start
+            execution_time.append(exe_time)
+            print("execution time : ", exe_time)
             topo_id = topo_id + 1
 
     # Write the results to a csv file
@@ -233,15 +235,23 @@ def ex4tighterpmoofp():
         writer = csv.writer(csvfile)
 
         # Define the column name
-        writer.writerow(["Round", "# Server", "Iteration", "Time"])
+        writer.writerow(["Round", "# Server", "# Flow", "Iteration", "Time"])
         
+        num_server == 10
         # Write the contents
-        num_server = 10
         for i in range(topo_id):
-            writer.writerow([i, num_server, iteration[i], execution_time[i]])
+
+            if num_server == 30:
+                num_server = 10
+
+            writer.writerow([i, num_server, int((num_server+1)*num_server/4), iteration[i], execution_time[i]])
             num_server = num_server + 1
 
 
+def main():
+    ex4tighterpmoofp()
+    
+
 if __name__ == "__main__":
 
-    ex4tighterpmoofp()
+    main()
