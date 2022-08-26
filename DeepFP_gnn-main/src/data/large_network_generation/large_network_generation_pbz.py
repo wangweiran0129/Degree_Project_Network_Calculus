@@ -36,7 +36,7 @@ def large_network_random_search(num_topo):
 
         print("----- topo id : ", topo_id, " -----")
 
-        num_server = random.randint(20, 33)
+        num_server = random.randint(20, 30)
         num_flow = int((num_server+1)*num_server/5)
 
         # To simplify the calculation in the adverseari attack process
@@ -177,6 +177,10 @@ def large_network_random_search(num_topo):
         print("pmoo original delay bound: ", original_delay_bound, "\n")
         objs[topo_id].flow[foi].pmoo.delay_bound = original_delay_bound
 
+        # Since the foi's sink server the last server in the network topology
+        # And we also want to save the time, so once we find a tighter delay bound, we set it as a target
+        # The following code is not needed. If you want a random exhaustive search, then the following code can be used
+        """
         # Find the possible flows which can be prolonged
         # i.e., the flow sink/destination server id < foi sink/destination server id
         foi_sink_server = objs[topo_id].flow[foi].path[-1]
@@ -230,6 +234,44 @@ def large_network_random_search(num_topo):
             print("min pmoofp delay bound : ", min_fp_delay_bound)
             objs[topo_id].flow[foi].pmoofp.delay_bound = min_fp_delay_bound
         print("")
+        """
+
+        # Add the explore combination (potential flow prolongation)
+        num_explore_combination = random.randint(num_flow*500, num_flow*1000)
+        real_num_explore_combination = 0
+        print("# explored combination ", num_explore_combination, "\n")
+
+        flow_list = [i for i in range(num_flow)]
+        flow_list.remove(foi)
+
+        for i in range(num_explore_combination):
+
+            flow_to_be_prolonged = random.sample(flow_list, random.randint(1, num_flow-1))
+            flow_to_be_prolonged.sort()
+
+            # Backup the original flow destination servers
+            flow_prolonged_dest_java = gateway.new_array(int_class, num_flow)
+            for fid in range(num_flow):
+                flow_prolonged_dest_java[fid] = flow_dest_java[fid]
+            
+            # Prolong the flows
+            for fid in flow_to_be_prolonged:
+                original_sink_server = objs[topo_id].flow[fid].path[-1]
+                prolonged_sink_server = random.randint(original_sink_server, foi_sink_server)
+                flow_prolonged_dest_java[fid] = prolonged_sink_server
+            
+            # Compute the delay bound after the flow prolongation
+            delay_bound_after_prolongation = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_prolonged_dest_java, foi)
+            
+            # To reduce the size of dataset, only the tigher delay bounds are recorded
+            if delay_bound_after_prolongation <= original_delay_bound:
+                objs[topo_id].flow[foi].pmoofp.explored_combination.add()
+                for fid in flow_to_be_prolonged:
+                    objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
+                objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].delay_bound = delay_bound_after_prolongation
+                print("We found a tighter delay bound at the iteration ", delay_bound_after_prolongation)
+                # Since we found a tighter delay bound, the loop will be terminated.
+                break
 
     # Write the network topology into the pbz file
     with write_pbz("dataset-attack-large.pbz", "network_structure/network_structure.descr") as w:
@@ -433,7 +475,7 @@ def large_network_gnn_prediction(num_topo, model):
         print("")
         
     # Write the network topology into the pbz file
-    with write_pbz("dataset-attack-large.pbz", "network_structure/network_structure.descr") as w:
+    with write_pbz("dataset-attack-large-exhaustive search.pbz", "network_structure/network_structure.descr") as w:
         for obj in objs:
             w.write(obj)
 
@@ -446,4 +488,5 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     model = torch.load(args.model)
-    large_network_gnn_prediction(int(args.num_topo), model)
+    large_network_random_search(int(args.num_topo))
+    # large_network_gnn_prediction(int(args.num_topo), model)

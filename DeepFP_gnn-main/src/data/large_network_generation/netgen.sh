@@ -16,6 +16,6 @@ source /home/weirwang/venvs/izar-python/bin/activate
 
 java -jar NetCal.jar &
 MY_JAVA_PID=$!
-python -m large_network_generation_pbz 2000 "../../model/deepfpPMOO.pt"
+python -m large_network_generation_pbz 1000 "../../model/deepfpPMOO.pt"
 kill $MY_JAVA_PID
 exit 0
