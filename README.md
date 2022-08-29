@@ -124,7 +124,7 @@ For the storage of analysis, it is highly recommended to create a directory for 
     ```
     [data/large_network_generation/network_structure]$ Make
     ```
-2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. There is also a ```temp4pred.pbz``` file in this folder, but ignore it. This is just an intermediate .pbz file for the proloned flow PMOO delay bound calculation.
+2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. There is also a ```temp4pred.pbz``` file in this folder, but ignore it. This is just an intermediate .pbz file for the proloned flow PMOO delay bound calculation. When the ```dataset-attack-large.pbz``` is created, please move it to ```Network_Information_and_Analysis/original_topology/before_fp/``` folder.
     ```
     [data/large_network_generation]$ java -jar NetCal.jar
     [data/large_network_generation]$ python3 -m dataset_network_generation_pbz <# topology> <deepfpPMOO.pt/ggnn_pmoo.pt model path>
@@ -133,7 +133,7 @@ For the storage of analysis, it is highly recommended to create a directory for 
     ```
     [<account@izar> data/large_network_generation]$ sbatch netgen.sh
     ```
-3. Transfer the pbz format file to .pickle format. The .pickle files are usually used as an input to the GNN model due to the matrix characteristic.
+3. Transfer the pbz format file to .pickle format. The .pickle files are usually used as an input to the GNN model due to the matrix characteristic. Basically, it the two output files are named after ```test_graphs.pickle``` and ```test_targets.pickle```. Please re-name them to ```attack_graphs.pickle``` and ```attack_targets.pickle```. Besides, please move them to ```Network_Information_and_Analysis/original_topology/before_fp/```.
     ```
     [data]$ python3 -m prepare_dataset_pmoo "<dataset-attack-large.pbz file path>"
     ```
@@ -141,7 +141,7 @@ For the storage of analysis, it is highly recommended to create a directory for 
     ```
     [<account@izar> data]$ sbatch pbz2pickle.sh
     ```
-4. Make the prediction on the original topologies (The topologies before the attack and before the GNN prediction). This step will output two files: One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside. Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.
+4. Make the prediction on the original topologies (The topologies before the attack and before the GNN prediction). This step will output two files: One is ```prediction_<topo_id>.csv``` where two prediction values are stored inside, in ```Network_Information_and_Analysis/prediction_value/```). Another is ```original_<topo_id>_<foi_id>.pbz``` which is the flow prolongation for the original topology (the topology before the Adversarial Attack), in (```Network_Information_and_Analysis/original_topology/after_fp/```).  Please be careful that in the prolongation of the original network, the delay bound after the flow prolongation will also be calculated, so please let the NetCal.jar run beforehand.
     ```
     [output]$ python3 -m predict_original_networks "<deepfpPMOO.pt/ggnn_pmoo.pt model path>" "<dataset-attack-large.pbz file path>"
     ```
@@ -155,7 +155,7 @@ For the storage of analysis, it is highly recommended to create a directory for 
     ```
     On IZAR server, run the script
     ```
-    [<account@izar> analysis]$ sbatch poatter.sh
+    [<account@izar> analysis]$ sbatch poattar.sh
     ```
 6. Use the [Fast Gradient Sign Method (FGSM)](https://pytorch.org/tutorials/beginner/fgsm_tutorial.html) to do the adversarial attack on the network features. It will output the topologies after the attack (.pbz) into the ```Network_Information_and_Analysis/attacked_topology/before_fp``` folder. Besides, PMOO delay bounds will also be calculated for the network after the attack, so please set on the NetCal.jar
     ```
@@ -176,8 +176,8 @@ For the storage of analysis, it is highly recommended to create a directory for 
 
 ## Disclaimer and Special Acknowledgement
 - Project Student: Weiran Wang (weiran.wang@epfl.ch / weiranw@kth.se)
-- Ph.D. Advisor: Tabatabaee Hossein (hossein.tabatabaee@epfl.ch)
-- Supervisor: Prof. Le Boudec Jean-Yves (jean-yves.leboudec@epfl.ch)
+- Ph.D. Advisor: Hossein Tabatabaee (hossein.tabatabaee@epfl.ch)
+- Supervisor: Prof. Jean-Yves Le Boudec (jean-yves.leboudec@epfl.ch)
 - Special Acknowledgement to:   
     - Bondorf Steffen (Bondorf.Steffen@ruhr-uni-bochum.de) and Alexander Scheffler (Alexander.Scheffler@ruhr-uni-bochum.de) for the support of the usage of NetCal/DNC tool.
     - Etienne Orliac (etienne.orliac@epfl.ch) for the support of the configuration of torch enviroment on EPFL IZAR cluster.

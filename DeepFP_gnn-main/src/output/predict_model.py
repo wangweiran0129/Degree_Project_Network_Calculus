@@ -1,4 +1,4 @@
-# This code is written by Karim Hadidane, and changed by Weiran Wang.
+# This code is written by Karim Hadidane, and is modified by Weiran Wang.
 # For any questions or problems, please contact the author of the code at (weiran.wang@epfl.ch)
 
 

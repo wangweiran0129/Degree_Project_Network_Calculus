@@ -10,7 +10,6 @@ sys.path.insert(0, "../")
 from pbzlib import open_pbz
 from model.train_model import *
 from output.write_attacked_network import *
-from data.prepare_dataset_deborah import *
 from data.prepare_dataset_pmoo import *
 
 
@@ -35,7 +34,7 @@ def fgsm_update(feature_matrix, feature_matrix_grad, eps, flow_rate):
     perturbed_feature_matrix = feature_matrix + eps * sign_feature_matrix_grad
 
     # Adding clipping to maintain [0,1]
-    perturbed_feature_matrix = torch.clamp(perturbed_feature_matrix, 0, 1)
+    perturbed_feature_matrix = torch.clamp(perturbed_feature_matrix, 0, 1).cpu()
 
     return perturbed_feature_matrix
 
@@ -52,10 +51,8 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
     :param attack_targets_path: the matrices stroing the FP/targets information (.pickle format)
     """
 
-    print("device : ", device)
-
     # Define the epsilon
-    update_max_norm = [0.0001, 0.0005, 0.001, 0.0015, 0.002, 0.0025, 0.003, 0.004, 0.005]
+    update_max_norm = [0.001, 0.002, 0.003, 0.004, 0.005]
 
     for eps in update_max_norm:
 
@@ -72,8 +69,6 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
     
         # Loop over all examples in test set in batches
         for graph, targets in dataset:
-
-            print("eps : ", eps)
 
             # The indices of servers
             server_index = graph.x[:,0]
@@ -94,6 +89,8 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
                     break
 
             if topology_id in potential_attack_target_topology_id:
+
+                print("eps : ", eps)
 
                 print("----- topology id : ", topology_id, " -----")
             
@@ -137,7 +134,7 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
                 # Zero all existing gradient
                 min_loss = losses[np.argmin(list(map(lambda x: x.item(), losses)))]
                 model.zero_grad()
-                min_loss.backward() # The code can't calculate the backward(), I have no idea why this happened!
+                min_loss.backward()
 
                 # Find the min/max server rate and server latency
                 min_server_rate = graph.x[0:len(server_feature), 4].min()
@@ -189,8 +186,10 @@ def evaluate_attack(model, device, potential_attack_target_topology_id, attack_d
                 attacked_file_name = "attacked_" + str(eps) + "_" +str(topology_id) + "_" + str(foi) + ".pbz"
                 print("attacked network file name : ", attacked_network_path + attacked_file_name)
                 write_attacked_network(original_network, x_hat, foi, attacked_network_path+attacked_file_name)
+                torch.cuda.empty_cache()
 
             else:
+                torch.cuda.empty_cache()
                 continue
 
 
@@ -232,9 +231,8 @@ if __name__ == "__main__":
     # Load the pretrained model
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("device : ", device)
-    model = torch.load(args.model, map_location=torch.device(device))
+    model = torch.load(args.model)
     model.eval()
-    print("model : ", model)
 
     # Import the potential attack target network.id
     potential_attack_target_topology_id = get_potential_attack_topology_id(args.potential_attack_file_path)

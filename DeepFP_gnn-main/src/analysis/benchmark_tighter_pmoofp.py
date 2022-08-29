@@ -38,13 +38,13 @@ def ex4tighterpmoofp():
     execution_time = []
     topo_id = 0
 
-    for round in tqdm(range(5)):
+    for round in tqdm(range(10)):
 
         print("round : ", round)
         
-        for num_server in range(10, 31):
+        for num_server in range(21, 31):
 
-            num_flow = int((num_server+1)*num_server/4)
+            num_flow = int((num_server+1)*num_server/5)
 
             # To simplify the calculation in the adverseari attack process, there will be only one foi in each topology
             foi = random.randint(0, num_flow-1)
@@ -178,19 +178,20 @@ def ex4tighterpmoofp():
             # Get the network topology instance and call the delayBoundCalculation Java method
             network_topology = gateway.entry_point
             original_delay_bound = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_dest_java, foi)
-            print("pmoo original delay bound: ", original_delay_bound, "\n")
+            # print("pmoo original delay bound: ", original_delay_bound, "\n")
             objs[topo_id].flow[foi].pmoo.delay_bound = original_delay_bound
 
             # Add the explore combination (potential flow prolongation)
             num_explore_combination = random.randint(num_flow*500, num_flow*1000)
             real_num_explore_combination = 0
-            print("# explored combination ", num_explore_combination, "\n")
 
             flow_list = [i for i in range(num_flow)]
             flow_list.remove(foi)
 
             # Now we begin to find the tighter delay bound by exhaustive search and calculate the time
             start = time.time()
+            print("start time : ", start)
+            tighter_delay_bound_counter = 0
 
             for i in range(num_explore_combination):
 
@@ -212,22 +213,22 @@ def ex4tighterpmoofp():
                 delay_bound_after_prolongation = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_prolonged_dest_java, foi)
                 
                 # To reduce the size of dataset, only the tigher delay bounds are recorded
-                if delay_bound_after_prolongation <= original_delay_bound:
-                    objs[topo_id].flow[foi].pmoofp.explored_combination.add()
-                    for fid in flow_to_be_prolonged:
-                        objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
-                    objs[topo_id].flow[foi].pmoofp.explored_combination[real_num_explore_combination].delay_bound = delay_bound_after_prolongation
-                    iteration.append(i)
-                    print("We found a tighter delay bound at the iteration ", i)
-                    
-                    # Since we found a tighter delay bound, the time calculated will be stop
-                    break
+                if delay_bound_after_prolongation < original_delay_bound:
+                    tighter_delay_bound_counter = tighter_delay_bound_counter + 1
+                    if tighter_delay_bound_counter == 5:
+                        iteration.append(i)
+                        print("We found a tighter delay bound at the iteration ", i)
+                        # Since we found a tighter delay bound, the time calculated will be stop
+                        break
             
             end = time.time()
+            print("end time : ", end)
             exe_time = end - start
+            print("execution time : ", exe_time, "seconds")
             execution_time.append(exe_time)
-            print("execution time : ", exe_time)
             topo_id = topo_id + 1
+
+    print("topo id : ", topo_id)
 
     # Write the results to a csv file
     with open("exhaustive_search_time_analysis.csv", "w") as csvfile:
@@ -237,15 +238,21 @@ def ex4tighterpmoofp():
         # Define the column name
         writer.writerow(["Round", "# Server", "# Flow", "Iteration", "Time"])
         
-        num_server == 10
+        # Initialize the number of servers
+        num_server == 21
+
         # Write the contents
         for i in range(topo_id):
 
-            if num_server == 30:
-                num_server = 10
+            print("i : ", i)
 
-            writer.writerow([i, num_server, int((num_server+1)*num_server/4), iteration[i], execution_time[i]])
+            print("# server : ", num_server)
+
+            writer.writerow([i, num_server, int((num_server+1)*num_server/5), iteration[i], execution_time[i]])
             num_server = num_server + 1
+
+            if num_server == 31:
+                num_server = 21
 
 
 def main():

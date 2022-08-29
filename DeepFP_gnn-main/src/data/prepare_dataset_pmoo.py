@@ -2,14 +2,18 @@
 # This code is changed by Weiran Wang.
 # For any questions or problems, please contact the author of the code at (weiran.wang@epfl.ch)
 
-import sys
-sys.path.insert(0, "../")
-from data.graph_transformer import *
+from multiprocessing.spawn import prepare
+import os
 import torch
-from torch_geometric.data import Data, DataLoader
 import pickle
 import argparse
+import re
+import sys
+from torch_geometric.data import Data, DataLoader
 from scipy.sparse import coo_matrix
+from tqdm import tqdm
+sys.path.insert(0, "../")
+from data.graph_transformer import *
 
 # The inputs are the graph G, unique identifiers for each node, prolongation nodes if its for training
 def graph2torch_pmoo(G, node_ids):
@@ -99,16 +103,18 @@ def get_best_pmoofp_combination(flow):
 
 
 # a method to read the network models and extract the graphs , and save them in pickle files
-def prepare_dataset_pmoo(path, train, to_pickle=True):
+def prepare_dataset_pmoo(path, tp, to_pickle=True):
     """
-
     :param path: path to the dataset raw file
-    :param train: boolean, True if it is a the training data
+    :param tp: type (but the type is a key word in Python) to show wether it's a trainning dataset or testing dataset
     :param to_pickle: boolean to indicate if the processed data is stored in serializable format
     :return: the graphs in the dataset (torch geometric data object) and the targets (torch tensors)
     """
     graphs = []
     targets = []
+
+    if tp == "attack":
+        topo_id, foi_id = re.findall(r"\d+\.?\d*", file)[0], re.findall(r"\d+\.?\d*", file)[1][:-1]
 
     # For each network in the file
     for network in pbzlib.open_pbz(path):
@@ -159,13 +165,19 @@ def prepare_dataset_pmoo(path, train, to_pickle=True):
 
                 targets.append(possible_targets)
 
-    # save train and test graphs and targets in serializable format
+    # save graphs and targets in serializable format according to different types
     if to_pickle:
-        file_name_graphs = "train_graphs.pickle"
-        file_name_targets = "train_targets.pickle"
-        if not train:
+        if tp == "train":
+            file_name_graphs = "train_graphs.pickle"
+            file_name_targets = "train_targets.pickle"
+        if tp == "test":
             file_name_graphs = "test_graphs.pickle"
             file_name_targets = "test_targets.pickle"
+        # Save the attack pickle files to the Network_Information_and_Analysis folder
+        if tp == "attack":
+            nia = "../../../Network_Information_and_Analysis/original_topology/before_fp/pickle/"
+            file_name_graphs = nia + "graphs/attack_graphs" + str(topo_id) + "_" + str(foi_id) + ".pickle"
+            file_name_targets = nia + "targets/attack_targets" + str(topo_id) + "_" + str(foi_id) + ".pickle"
 
         # Saving the training graphs in a pickle format
         outfile = open(file_name_graphs, 'wb')
@@ -181,8 +193,22 @@ def prepare_dataset_pmoo(path, train, to_pickle=True):
 
 
 if __name__ == "__main__":
+    
     p = argparse.ArgumentParser()
-    p.add_argument("input")
+    p.add_argument("dataset_folder")
+    p.add_argument("tp")
     args = p.parse_args()
-    dataset_address = args.input
-    prepare_dataset_pmoo(dataset_address, train=False)
+    dataset_folder = args.dataset_folder
+    tp = args.tp
+
+    if tp == "attack":
+        files = os.listdir(dataset_folder)
+        if ".DS_Store" in files:
+            files.remove(".DS_Store")
+        files.sort()
+        print("# original network topologies : ", files)
+
+        for file in tqdm(files):
+            prepare_dataset_pmoo(dataset_folder + file, tp)
+    else:
+        prepare_dataset_pmoo(dataset_folder, tp)

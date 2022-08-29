@@ -14,7 +14,7 @@ echo Running on `hostname`
 
 source /home/weirwang/venvs/izar-python/bin/activate
 
-java -jar ../NetCal.jar &
+java -jar NetCal.jar &
 MY_JAVA_PID=$!
 python -m adversarial_attack "../model/deepfpPMOO.pt" "../../../Network_Information_and_Analysis/potential_attack_target2.csv" "../../../Network_Information_and_Analysis/original_topology/before_fp/dataset-attack-large.pbz" "../../../Network_Information_and_Analysis/original_topology/before_fp/attack_graphs.pickle" "../../../Network_Information_and_Analysis/original_topology/before_fp/attack_targets.pickle"
 kill $MY_JAVA_PID
