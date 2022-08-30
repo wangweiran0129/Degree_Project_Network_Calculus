@@ -95,7 +95,7 @@ if __name__ == "__main__":
     files = os.listdir(original_network_path)
     if ".DS_Store" in files:
         files.remove(".DS_Store")
-    files.sort()
+    files.sort(key = lambda x: int(re.findall(r"\d+\.?\d*", x)[0]))
 
     for file in files:
         topo_id, foi_id = re.findall(r"\d+\.?\d*", file)[0], re.findall(r"\d+\.?\d*", file)[1][:-1]
