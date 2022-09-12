@@ -29,7 +29,7 @@ def large_network_random_search(num_topo):
     double_class = gateway.jvm.double
     int_class = gateway.jvm.int
 
-    for topo_id in range(200, num_topo+200):
+    for topo_id in range(num_topo, num_topo+250):
 
         print("----- topo id : ", topo_id, " -----")
 
@@ -181,8 +181,12 @@ def large_network_random_search(num_topo):
         
         # i.e., the flow sink/destination server id < foi sink/destination server id
         foi_sink_server = obj.flow[foi].path[-1]
-        flow_list = [i for i in range(num_flow)]
-        flow_list.remove(foi)
+        possible_flow_to_be_prolonged = []
+        for f in obj[topo_id].flow:
+            if f.path[-1] < foi_sink_server:
+                possible_flow_to_be_prolonged.append(f.id)
+        length_possible_flow_to_be_prolonged = len(possible_flow_to_be_prolonged)
+        print("# possible flows : ", length_possible_flow_to_be_prolonged)
 
         # Add the explore combination (potential flow prolongation)
         num_explore_combination = random.randint(num_flow*500, num_flow*1000)
@@ -192,7 +196,7 @@ def large_network_random_search(num_topo):
 
         for i in range(num_explore_combination):
 
-            flow_to_be_prolonged = random.sample(flow_list, random.randint(1, len(flow_list)))
+            flow_to_be_prolonged = random.sample(possible_flow_to_be_prolonged, random.randint(1, length_possible_flow_to_be_prolonged))
             flow_to_be_prolonged.sort()
 
             # Backup the original flow destination servers
