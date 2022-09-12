@@ -9,6 +9,7 @@ import pickle
 import argparse
 import re
 import sys
+from pbzlib import open_pbz
 from torch_geometric.data import Data, DataLoader
 from scipy.sparse import coo_matrix
 from tqdm import tqdm
@@ -117,7 +118,7 @@ def prepare_dataset_pmoo(path, tp, to_pickle=True):
         topo_id, foi_id = re.findall(r"\d+\.?\d*", file)[0], re.findall(r"\d+\.?\d*", file)[1][:-1]
 
     # For each network in the file
-    for network in pbzlib.open_pbz(path):
+    for network in open_pbz(path):
         # Get the base graph i.e server nodes, flow nodes, and links between them
         G, flow_paths = net2basegraph(network)
 
@@ -176,8 +177,8 @@ def prepare_dataset_pmoo(path, tp, to_pickle=True):
         # Save the attack pickle files to the Network_Information_and_Analysis folder
         if tp == "attack":
             nia = "../../../Network_Information_and_Analysis/original_topology/before_fp/pickle/"
-            file_name_graphs = nia + "graphs/attack_graphs" + str(topo_id) + "_" + str(foi_id) + ".pickle"
-            file_name_targets = nia + "targets/attack_targets" + str(topo_id) + "_" + str(foi_id) + ".pickle"
+            file_name_graphs = nia + "graphs/attack_graphs_" + str(topo_id) + "_" + str(foi_id) + ".pickle"
+            file_name_targets = nia + "targets/attack_targets_" + str(topo_id) + "_" + str(foi_id) + ".pickle"
 
         # Saving the training graphs in a pickle format
         outfile = open(file_name_graphs, 'wb')
@@ -205,10 +206,12 @@ if __name__ == "__main__":
         files = os.listdir(dataset_folder)
         if ".DS_Store" in files:
             files.remove(".DS_Store")
-        files.sort()
-        print("# original network topologies : ", files)
+        files.sort(key = lambda x: int(re.findall(r"\d+\.?\d*", x)[0]))
 
         for file in tqdm(files):
+            topo_id = re.findall(r"\d+\.?\d*", file)[0]
+            print("topo id : ", topo_id)
             prepare_dataset_pmoo(dataset_folder + file, tp)
+
     else:
         prepare_dataset_pmoo(dataset_folder, tp)
