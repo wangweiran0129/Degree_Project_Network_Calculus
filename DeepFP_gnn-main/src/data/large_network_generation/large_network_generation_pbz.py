@@ -29,7 +29,7 @@ def large_network_random_search(num_topo):
     double_class = gateway.jvm.double
     int_class = gateway.jvm.int
 
-    for topo_id in range(num_topo, num_topo+250):
+    for topo_id in range(num_topo, num_topo+35):
 
         print("----- topo id : ", topo_id, " -----")
 
@@ -182,7 +182,7 @@ def large_network_random_search(num_topo):
         # i.e., the flow sink/destination server id < foi sink/destination server id
         foi_sink_server = obj.flow[foi].path[-1]
         possible_flow_to_be_prolonged = []
-        for f in obj[topo_id].flow:
+        for f in obj.flow:
             if f.path[-1] < foi_sink_server:
                 possible_flow_to_be_prolonged.append(f.id)
         length_possible_flow_to_be_prolonged = len(possible_flow_to_be_prolonged)

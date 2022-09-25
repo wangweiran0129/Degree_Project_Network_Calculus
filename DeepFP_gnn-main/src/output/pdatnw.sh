@@ -3,7 +3,7 @@
 
 #SBATCH --nodes 1
 #SBATCH --cpus-per-task 1
-#SBATCH --ntasks 1
+#SBATCH --ntasks 2
 #SBATCH --mem 48G
 #SBATCH --partition=gpu
 #SBATCH --qos=gpu_free

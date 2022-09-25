@@ -2,7 +2,6 @@
 # This code is changed by Weiran Wang.
 # For any questions or problems, please contact the author of the code at (weiran.wang@epfl.ch)
 
-from multiprocessing.spawn import prepare
 import os
 import torch
 import pickle
@@ -210,7 +209,6 @@ if __name__ == "__main__":
 
         for file in tqdm(files):
             topo_id = re.findall(r"\d+\.?\d*", file)[0]
-            print("topo id : ", topo_id)
             prepare_dataset_pmoo(dataset_folder + file, tp)
 
     else:

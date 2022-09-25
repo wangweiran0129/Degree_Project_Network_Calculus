@@ -14,4 +14,4 @@ echo Running on `hostname`
 
 source /home/weirwang/venvs/izar-python/bin/activate
 
-python attack_topo_analysis.py
+python attack_topo_analysis -m "../../../Network_Information_and_Analysis/original_topology/before_fp/pbz/"
