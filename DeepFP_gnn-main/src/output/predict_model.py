@@ -16,6 +16,7 @@ from py4j.java_gateway import JavaGateway
 def predict_network(network, foi_id, model, output_file="output.pbz"):
     """
     A method that uses the model trained to predict new network configuration and write it in proto file format
+    
     :param network: network parameters
     :param foi_id: the flow of interest
     :param model: the model
@@ -75,6 +76,7 @@ def predict_sink_sever(network, foi_id, model):
     """
     A method that uses the pre-trained model trained to predict the sink server.
     This function is mainly used in the process of creating a larger dataset
+
     :param network: a network topology stored in the .pbz file
     :param foi_id: the flow of interest
     :param model: the pre-trained model
@@ -128,6 +130,7 @@ def predict_sink_sever(network, foi_id, model):
 def write_network(network, flows_start_sink, foi, filename):
     """
     A method that writes the network generated into a protobuf file according to the attack.descr description file
+
     :param network: the network parameters
     :param flows_start_sink: the flows path
     :param foi: the foi id

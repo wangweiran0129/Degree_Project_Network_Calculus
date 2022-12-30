@@ -8,7 +8,6 @@ import pickle
 import argparse
 import re
 import sys
-from pbzlib import open_pbz
 from torch_geometric.data import Data, DataLoader
 from scipy.sparse import coo_matrix
 from tqdm import tqdm
@@ -113,71 +112,65 @@ def prepare_dataset_pmoo(path, tp, to_pickle=True):
     graphs = []
     targets = []
 
-    if tp == "attack":
-        topo_id, foi_id = re.findall(r"\d+\.?\d*", file)[0], re.findall(r"\d+\.?\d*", file)[1][:-1]
-
     # For each network in the file
-    for network in open_pbz(path):
-        # Get the base graph i.e server nodes, flow nodes, and links between them
-        G, flow_paths = net2basegraph(network)
+    # for network in pbzlib.open_pbz(path):
+    network = next(pbzlib.open_pbz(path))
 
-        for flow in network.flow:
+    topo_id, foi_id = re.findall(r"\d+\.?\d*", path)[0], re.findall(r"\d+\.?\d*", path)[1][:-1]
+    
+    # Get the base graph i.e server nodes, flow nodes, and links between them
+    G, flow_paths = net2basegraph(network)
 
-            # If the flow has been explored using pmoo FP
-            if flow.HasField("pmoofp"):
-                # create version of a graph where the current flow is the flow of interest (Algorithm 2 of the paper)
-                G_f, pro_dict, node_ids = prolong_graph(G, flow.id, flow_paths)
+    for flow in network.flow:
 
-                # best combinations are the ones that yield minimum delay bound, multiple optimal combinations can exist
-                best_combinations = get_best_pmoofp_combination(flow)
+        # If the flow has been explored using pmoo FP
+        if flow.HasField("pmoofp"):
 
-                flows_that_can_be_prolonged = set(pro_dict.keys())
+            # create version of a graph where the current flow is the flow of interest (Algorithm 2 of the paper)
+            G_f, pro_dict, node_ids = prolong_graph(G, flow.id, flow_paths)
 
-                grph = graph2torch_pmoo(G_f, node_ids=node_ids)
+            # best combinations are the ones that yield minimum delay bound, multiple optimal combinations can exist
+            best_combinations = get_best_pmoofp_combination(flow)
 
-                # Append the created graph to the dataset
-                graphs.append(grph)
+            flows_that_can_be_prolonged = set(pro_dict.keys())
 
-                # worth prolonging if pmoo FP gives tighter delay bound than Pmoo
-                worth_prolonging = flow.pmoofp.delay_bound < flow.pmoo.delay_bound
-                foi_index = node_ids["f_" + str(flow.id)]
+            grph = graph2torch_pmoo(G_f, node_ids=node_ids)
 
-                possible_targets = []
+            # Append the created graph to the dataset
+            graphs.append(grph)
 
-                # Equally optimal targets can exist: this is implementing Equation 11 in the paper
-                for comb in best_combinations:
-                    # Prolongation nodes to activate
-                    comb_nodes = ["p" + str(k) + "_" + str(v) for k, v in comb.items()]
+            # worth prolonging if pmoo FP gives tighter delay bound than Pmoo
+            worth_prolonging = flow.pmoofp.delay_bound < flow.pmoo.delay_bound
+            foi_index = node_ids["f_" + str(flow.id)]
 
-                    # Some prolongation nodes that need to be activated (for flows that will not be prolonged)
-                    # are not included in the mapping given in the dataset
-                    # These lines are to mitigate this problem
-                    prolonged = set(comb.keys())
-                    k = flows_that_can_be_prolonged.difference(prolonged)
-                    comb_nodes.extend(list(map(lambda x: "p" + str(x) + "_" + str(flow_paths[x][-1]), k)))
+            possible_targets = []
 
-                    y = torch.zeros(G_f.number_of_nodes(), dtype=torch.float)
-                    y[foi_index] = worth_prolonging
+            # Equally optimal targets can exist: this is implementing Equation 11 in the paper
+            for comb in best_combinations:
+                # Prolongation nodes to activate
+                comb_nodes = ["p" + str(k) + "_" + str(v) for k, v in comb.items()]
 
-                    prolongation_nodes_indices = torch.tensor([node_ids[pro_node] for pro_node in comb_nodes])
-                    y.index_fill_(dim=0, index=prolongation_nodes_indices, value=1)
-                    possible_targets.append(y)
+                # Some prolongation nodes that need to be activated (for flows that will not be prolonged)
+                # are not included in the mapping given in the dataset
+                # These lines are to mitigate this problem
+                prolonged = set(comb.keys())
+                k = flows_that_can_be_prolonged.difference(prolonged)
+                comb_nodes.extend(list(map(lambda x: "p" + str(x) + "_" + str(flow_paths[x][-1]), k)))
 
-                targets.append(possible_targets)
+                y = torch.zeros(G_f.number_of_nodes(), dtype=torch.float)
+                y[foi_index] = worth_prolonging
+
+                prolongation_nodes_indices = torch.tensor([node_ids[pro_node] for pro_node in comb_nodes])
+                y.index_fill_(dim=0, index=prolongation_nodes_indices, value=1)
+                possible_targets.append(y)
+
+            targets.append(possible_targets)
 
     # save graphs and targets in serializable format according to different types
     if to_pickle:
-        if tp == "train":
-            file_name_graphs = "train_graphs.pickle"
-            file_name_targets = "train_targets.pickle"
-        if tp == "test":
-            file_name_graphs = "test_graphs.pickle"
-            file_name_targets = "test_targets.pickle"
-        # Save the attack pickle files to the Network_Information_and_Analysis folder
-        if tp == "attack":
-            nia = "../../../Network_Information_and_Analysis/original_topology/before_fp/pickle/"
-            file_name_graphs = nia + "graphs/attack_graphs_" + str(topo_id) + "_" + str(foi_id) + ".pickle"
-            file_name_targets = nia + "targets/attack_targets_" + str(topo_id) + "_" + str(foi_id) + ".pickle"
+        nia = "../../../Network_Information_and_Analysis/original_topology/before_fp/pickle/"
+        file_name_graphs = nia + "graphs/obfp_graphs_" + str(topo_id) + "_" + str(foi_id) + ".pickle"
+        file_name_targets = nia + "targets/obfp_targets_" + str(topo_id) + "_" + str(foi_id) + ".pickle"
 
         # Saving the training graphs in a pickle format
         outfile = open(file_name_graphs, 'wb')
@@ -209,7 +202,13 @@ if __name__ == "__main__":
 
         for file in tqdm(files):
             topo_id = re.findall(r"\d+\.?\d*", file)[0]
-            prepare_dataset_pmoo(dataset_folder + file, tp)
+            if int(topo_id) in range(0, 8000):
+                continue
+            elif int(topo_id) in range(8000, 9000):
+                print("topo id : ", topo_id)
+                prepare_dataset_pmoo(dataset_folder + file, tp)
+            else:
+                break
 
     else:
         prepare_dataset_pmoo(dataset_folder, tp)

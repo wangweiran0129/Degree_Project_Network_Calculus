@@ -112,7 +112,7 @@ def potential_attack_target_pred2(pred_file):
             # Keep a record on the topology id, flow of interest id, and the flow id
             flow_pred.remove(flow_pred_max)
             for pred_value in flow_pred:
-                if abs(flow_pred_max - pred_value) <= 0.01 and flow_pred_max != pred_value and flow_pred_max > 0.1:
+                if abs(flow_pred_max - pred_value) <= 0.1 and flow_pred_max != pred_value and flow_pred_max > 0.1:
                     potential_attack_target.append([topology_id, foi, flow_counter[flow_index][0]])
                     break
     return potential_attack_target
@@ -166,7 +166,7 @@ if __name__ == "__main__":
                         pred2_csv.writerow([potential_attack_target2[i][0], potential_attack_target2[i][1], potential_attack_target2[i][2]])
             # Otherwise, append the content into the file
             else:
-                with open(potential_attack_target2_csv, "+a") as csvfile:
+                with open(potential_attack_target2_csv, "a+") as csvfile:
                     pred2_csv = csv.writer(csvfile)
                     pred2_csv.writerow(["topology id", "foi id", "flow id"])
                     for i in range(len(potential_attack_target2)):

@@ -133,23 +133,25 @@ def evaluate(model, test_data, device):
     model.eval()
 
     correct_predicted_deepfp = 0
-    correct_predicted_deepfp4 = 0
+    # correct_predicted_deepfp4 = 0
 
     for graph, targets in test_data:
         with torch.no_grad():
             adj = prepare_adjacency_matrix(graph)
             out1, out2 = model(graph.to(device), adj.to(device))
 
-        accurate_deepfp, accurate_deepfp4 = accurate_deepFP_deepFP4(out1, out2, graph, targets)
+        # accurate_deepfp, accurate_deepfp4 = accurate_deepFP_deepFP4(out1, out2, graph, targets)
+        accurate_deepfp = accurate_deepFP_deepFP4(out1, out2, graph, targets)
         correct_predicted_deepfp = correct_predicted_deepfp + accurate_deepfp
-        correct_predicted_deepfp4 = correct_predicted_deepfp4 + accurate_deepfp4
+        # correct_predicted_deepfp4 = correct_predicted_deepfp4 + accurate_deepfp4
 
     # for each graph in the dataset, a correct classification means that the model outputs the correct flow
     # prolongations for all cross flows
     accuracy_deepfp = correct_predicted_deepfp / len(test_data)
-    accuracy_deepfp4 = correct_predicted_deepfp4 / len(test_data)
+    # accuracy_deepfp4 = correct_predicted_deepfp4 / len(test_data)
 
-    return accuracy_deepfp, accuracy_deepfp4
+    # return accuracy_deepfp, accuracy_deepfp4
+    return accuracy_deepfp
 
 
 def accurate_deepFP_deepFP4(classification_foi_output, classification_pro_output, graph, targets):
@@ -179,22 +181,22 @@ def accurate_deepFP_deepFP4(classification_foi_output, classification_pro_output
     pro_nodes = graph.x[graph.mask]
 
     prolongations_deepfp = create_output_vector(pro_nodes, output_prolongations, 1)
-    prolongations_deepfp4 = create_output_vector(pro_nodes, output_prolongations, 4)
+    # prolongations_deepfp4 = create_output_vector(pro_nodes, output_prolongations, 4)
 
     worth_prolonging = torch.index_select(targets[0], 0, foi_idx).item() == 1
 
     if worth_prolonging and predicted_label == 1:
         correct_predicted_targets_deepfp = 0
-        correct_predicted_targets_deepfp4 = 0
+        # correct_predicted_targets_deepfp4 = 0
 
         for t in targets:
             target_prolongations = torch.index_select(t, 0, idxmask).cpu()
             correct_predicted_targets_deepfp = correct_predicted_targets_deepfp + compute_correct_solutions(
                 prolongations_deepfp, target_prolongations)
-            correct_predicted_targets_deepfp4 = correct_predicted_targets_deepfp4 + compute_correct_solutions(
-                prolongations_deepfp4, target_prolongations)
+            # correct_predicted_targets_deepfp4 = correct_predicted_targets_deepfp4 + compute_correct_solutions(prolongations_deepfp4, target_prolongations)
 
-        return correct_predicted_targets_deepfp > 0, correct_predicted_targets_deepfp4 > 0
+        # return correct_predicted_targets_deepfp > 0, correct_predicted_targets_deepfp4 > 0
+        return correct_predicted_targets_deepfp > 0
     elif (not worth_prolonging) and predicted_label == 0:
         return True, True
 

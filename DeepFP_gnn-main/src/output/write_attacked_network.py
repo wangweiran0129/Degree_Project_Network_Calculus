@@ -14,6 +14,7 @@ def write_attacked_network(network, perturbed_graph, foi, filename):
     A method that writes the network after the adversarial attack
     into a protobuf file according to the attack.descr description file
     and also calculate the delay bound for this network
+    
     :param network: the original network before the attack
     :perturbed_graph: the network matrix after the attack
     :param foi: the foi id

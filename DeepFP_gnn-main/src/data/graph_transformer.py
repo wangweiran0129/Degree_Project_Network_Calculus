@@ -97,7 +97,6 @@ def valid_prolongation(flow, s, flow_paths, foi_id):
     condition2 = s > last_server_in_flow_path if ordering == "Asc" else s < last_server_in_flow_path
     condition3 = last_server_in_flow_path != path_foi[-1]
     condition4 = len(set(path_foi) & set(path)) > 0
-
     return (condition1 or condition2) and condition3 and condition4
 
 def prolong_graph(G_in, foi_id, flow_paths):

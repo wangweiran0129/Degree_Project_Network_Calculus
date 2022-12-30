@@ -89,6 +89,10 @@ For the storage of analysis, it is highly recommended to create a directory for 
     └-- attacked_topology
     |   |-- after_fp
     |   └-- before_fp
+    |       |-- pbz
+    |       └-- pickle
+    |           |-- graphs
+    |           └-- targets
     |-- original_topology
     |   |-- after_fp
     |   └-- before_fp

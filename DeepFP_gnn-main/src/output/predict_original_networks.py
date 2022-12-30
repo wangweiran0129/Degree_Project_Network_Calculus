@@ -6,7 +6,6 @@ import csv
 import argparse
 import os
 import re
-from tqdm import tqdm
 import sys
 sys.path.append("../")
 from output.predict_model import *
@@ -18,6 +17,7 @@ def predict_original_network(model, original_network, topology_id, foi_id):
     Output the network topology after flow prolongation, but before the adversarial attack, in .pbz format.
     Output a prediction csv file where two prediction values are stored inside.
     This .pbz file will help us find the potential attack targets
+
     :param model: the pre-trained model
     :param original_network: the original network before the adversarial attack and before the GNN flow prolongation prediction, in .pbz format
     :param topology_id: the id of this network topology, i.e., the network id in the pbz file
@@ -57,7 +57,7 @@ def predict_original_network(model, original_network, topology_id, foi_id):
         cross_flow_cominbation_sink_servers.append(flow_paths[foi_id][(int)(cross_flow[-2].item() - 1)])
     
     # Predict the ORIGINAL network, i.e., the network topology before the adversarial attack
-    original_network_after_fp = original_fp_path + 'original_topology/after_fp/original_' + str(topology_id) + '_' + str(foi_id) + '.pbz'
+    original_network_after_fp = original_fp_path + 'original_topology/after_fp/oafp_' + str(topology_id) + '_' + str(foi_id) + '.pbz'
     _, pred1_before_attack, pred2_before_attack = predict_network(original_network, foi_id, model, original_network_after_fp)
 
     # GNN prediction pred1 & pred2 analysis folder
@@ -75,7 +75,6 @@ def predict_original_network(model, original_network, topology_id, foi_id):
         for line in range(original_G.number_of_nodes(), prolonged_G.number_of_nodes()):
             fid = line - original_G.number_of_nodes()
             pred_csv.writerow([cross_flows[fid], cross_flow_combination_start_servers[fid], cross_flow_cominbation_sink_servers[fid], pred2_before_attack[line].item()])
-
 
 if __name__ == "__main__":
 
@@ -100,4 +99,9 @@ if __name__ == "__main__":
     for file in files:
         topo_id, foi_id = re.findall(r"\d+\.?\d*", file)[0], re.findall(r"\d+\.?\d*", file)[1][:-1]
         original_network = next(open_pbz(original_network_path + file))
-        predict_original_network(model, original_network, int(topo_id), int(foi_id))
+        if int(topo_id) in range(0, 8000):
+            continue
+        elif int(topo_id) in range(8000, 9000):
+            predict_original_network(model, original_network, int(topo_id), int(foi_id))
+        else:
+            break

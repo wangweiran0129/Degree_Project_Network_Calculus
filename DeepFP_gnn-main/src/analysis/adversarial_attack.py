@@ -30,7 +30,7 @@ def fgsm_update(feature_matrix, feature_matrix_grad, eps, flow_rate):
     sign_feature_matrix_grad = feature_matrix_grad.sign()
 
     if flow_rate == True:
-        eps = eps / 100
+        eps = eps / 150
 
     # Create the perturbed features
     perturbed_feature_matrix = feature_matrix + eps * sign_feature_matrix_grad
@@ -54,7 +54,7 @@ def evaluate_attack(model, device, original_network, topo_id, attack_graphs_path
     """
 
     # Define the epsilon
-    update_max_norm = [0.001, 0.002, 0.003, 0.004, 0.005]
+    update_max_norm = [0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.011, 0.012, 0.013, 0.014, 0.015, 0.016, 0.017, 0.018, 0.019, 0.02]
 
     for eps in update_max_norm:
 
@@ -142,14 +142,12 @@ def evaluate_attack(model, device, original_network, topo_id, attack_graphs_path
             max_flow_rate = graph.x[len(server_feature):len(server_feature)+len(flow_feature), 6].max()
             max_flow_burst = graph.x[len(server_feature):len(server_feature)+len(flow_feature), 7].max()
 
-            # The code doesn't come to here
-
             # Attack the whole graph excapt for the flow rate
             # graph.x.retain_grad()
             perturbed_graph_feature = fgsm_update(graph.x, graph.x.grad, eps, flow_rate = False)
+            x_hat = graph.x.detach()
             
             # Recover the original value for the server rate and latency
-            x_hat = graph.x.detach()
             x_hat[0:len(server_feature), 4:6] = perturbed_graph_feature[0:len(server_feature), 4:6]
             # Replace 0 with the minimum value
             x_hat[0:len(server_feature), 4] = torch.where(x_hat[0:len(server_feature), 4]==0, min_server_rate, x_hat[0:len(server_feature), 4])
@@ -164,7 +162,7 @@ def evaluate_attack(model, device, original_network, topo_id, attack_graphs_path
             x_hat[len(server_feature):len(server_feature)+len(flow_feature), 7] = torch.where(x_hat[len(server_feature):len(server_feature)+len(flow_feature), 7]==0, min_flow_burst, x_hat[len(server_feature):len(server_feature)+len(flow_feature), 7])
             # Replace 1 with the maximum value
             x_hat[len(server_feature):len(server_feature)+len(flow_feature), 7] = torch.where(x_hat[len(server_feature):len(server_feature)+len(flow_feature), 7]==1, max_flow_burst, x_hat[len(server_feature):len(server_feature)+len(flow_feature), 7])
-            
+
             # Attack the whole graph for the flow rate
             perturbed_graph_feature_flow_rate = fgsm_update(graph.x, graph.x.grad, eps, flow_rate = True)
             
@@ -177,7 +175,7 @@ def evaluate_attack(model, device, original_network, topo_id, attack_graphs_path
 
             # Write the changes to a new .pbz file
             attacked_network_path = "../../../Network_Information_and_Analysis/attacked_topology/before_fp/"
-            attacked_file_name = "attacked_" + str(topo_id) + "_" + str(foi) + "_" + str(eps) + ".pbz"
+            attacked_file_name = "abfp_" + str(topo_id) + "_" + str(foi) + "_" + str(eps) + ".pbz"
             print("attacked network file name : ", attacked_network_path + attacked_file_name)
             write_attacked_network(original_network, x_hat, foi, attacked_network_path+attacked_file_name)
             torch.cuda.empty_cache()
@@ -225,7 +223,7 @@ if __name__ == "__main__":
 
     # Import the potential attack target network.id
     potential_attack_target_topology_id = get_potential_attack_topology_id(args.potential_attack_file_path)
-
+    
     attack_dataset = args.attack_dataset
     attack_pickle_path = args.attack_pickle_path
 
@@ -237,14 +235,14 @@ if __name__ == "__main__":
     for dataset in tqdm(datasets):
         original_network = next(open_pbz(attack_dataset + dataset))
         topo_id = re.findall(r"\d+\.?\d*", dataset)[0]
+        print("topo id : ", topo_id)
         foi_id = re.findall(r"\d+\.?\d*", dataset)[1]
         if int(topo_id) in potential_attack_target_topology_id:
-            attack_pickle_graph = attack_pickle_path + "graphs/attack_graphs_" + topo_id + "_" + foi_id + "pickle"
-            attack_pickle_target = attack_pickle_path + "targets/attack_targets_" + topo_id + "_" + foi_id + "pickle"
-            if int(topo_id) in range(0, 500):
+            attack_pickle_graph = attack_pickle_path + "graphs/obfp_graphs_" + topo_id + "_" + foi_id + "pickle"
+            attack_pickle_target = attack_pickle_path + "targets/obfp_targets_" + topo_id + "_" + foi_id + "pickle"
+            if int(topo_id) in range(0, 8000):
                 continue
-            elif int(topo_id) in range(500, 1000):
+            elif int(topo_id) in range(8000, 9000):
                 evaluate_attack(model, device, original_network, topo_id, attack_pickle_graph, attack_pickle_target)
             else:
                 break
-

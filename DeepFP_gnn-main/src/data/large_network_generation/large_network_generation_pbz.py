@@ -3,6 +3,8 @@
 
 import random
 import collections
+import argparse
+import networkx as nx
 import torch
 from tqdm import tqdm
 from pbzlib import open_pbz, write_pbz
@@ -10,10 +12,11 @@ from scipy.sparse import coo_matrix
 from py4j.java_gateway import JavaGateway
 import sys
 sys.path.insert(0, "../../")
+from data.large_network_generation.network_structure.network_structure_pb2 import *
 from output.predict_model import *
 
 
-def large_network_random_search(num_topo):
+def large_network_random_search(topo_id_start, topo_id_end):
     """
     This function will generate a large-scale network dataset for adversarial attack
     The number of network topologies depends on the parameter passing 'num_topology',
@@ -21,7 +24,8 @@ def large_network_random_search(num_topo):
     flow prolongation is found by a random search, similar to exhaustive search, but
     with fewer numbers of search, and randomly choose the flows to prolong.
 
-    :param num_topo: the number of topology in this dataset 
+    :param topo_id_start: starting topo id that you want to begin
+    :param topo_id_end: ending topo id that you want to stop
     """
 
     # Connect to the JVM
@@ -29,7 +33,7 @@ def large_network_random_search(num_topo):
     double_class = gateway.jvm.double
     int_class = gateway.jvm.int
 
-    for topo_id in range(num_topo, num_topo+35):
+    for topo_id in range(topo_id_start, topo_id_end+1):
 
         print("----- topo id : ", topo_id, " -----")
 
@@ -37,7 +41,7 @@ def large_network_random_search(num_topo):
         obj = Network(id = topo_id)
 
         num_server = random.randint(20, 30)
-        num_flow = int((num_server+1)*num_server/5)
+        num_flow = int((num_server+1)*num_server/9)
 
         # To simplify the calculation in the adverseari attack process
         # There will be only one foi in each topology
@@ -173,7 +177,10 @@ def large_network_random_search(num_topo):
         network_topology = gateway.entry_point
         original_delay_bound = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_dest_java, foi)
         print("pmoo original delay bound: ", original_delay_bound, "\n")
-        obj.flow[foi].pmoo.delay_bound = original_delay_bound
+        if original_delay_bound > 0:
+            obj.flow[foi].pmoo.delay_bound = original_delay_bound
+        else:
+            continue
 
         # Since the foi's sink server the last server in the network topology
         # And we also want to save the time, so once we find three tighter delay bounds
@@ -207,14 +214,14 @@ def large_network_random_search(num_topo):
             # Prolong the flows
             for fid in flow_to_be_prolonged:
                 original_sink_server = obj.flow[fid].path[-1]
-                prolonged_sink_server = random.randint(original_sink_server, foi_sink_server)
+                prolonged_sink_server = random.randint(original_sink_server+1, foi_sink_server)
                 flow_prolonged_dest_java[fid] = prolonged_sink_server
             
             # Compute the delay bound after the flow prolongation
             delay_bound_after_prolongation = network_topology.delayBoundCalculation4OneFoi(server_rate_java, server_latency_java, flow_rate_java, flow_burst_java, flow_src_java, flow_prolonged_dest_java, foi)
             
             # To reduce the size of dataset, only the tigher delay bounds are recorded
-            if delay_bound_after_prolongation <= original_delay_bound:
+            if delay_bound_after_prolongation > 0 and delay_bound_after_prolongation < original_delay_bound:
                 obj.flow[foi].pmoofp.explored_combination.add()
                 for fid in flow_to_be_prolonged:
                     obj.flow[foi].pmoofp.explored_combination[real_num_explore_combination].flows_prolongation[fid] = flow_prolonged_dest_java[fid]
@@ -245,7 +252,7 @@ def large_network_random_search(num_topo):
             w.write(obj)
 
 
-def large_network_gnn_prediction(num_topo, model):
+def large_network_gnn_prediction(topo_id_start, topo_id_end, model):
     """
     This function will generate a large-scale network dataset for adversarial attack
     The number of network topologies depends on the parameter passing 'num_topology',
@@ -254,7 +261,8 @@ def large_network_gnn_prediction(num_topo, model):
     running time. The gnn.py is copied and pasted here for the purpose of loading the
     gnn model.
 
-    :param num_topo: the number of topology in this dataset 
+    :param topo_id_start: starting topo id that you want to begin
+    :param topo_id_end: ending topo id that you want to stop
     :param model: the pre-trained model based on pmoo
     """
 
@@ -266,7 +274,7 @@ def large_network_gnn_prediction(num_topo, model):
     # objs store the network information
     objs = []
 
-    for topo_id in tqdm(range(num_topo)):
+    for topo_id in range(topo_id_start, topo_id_end+1):
 
         print("----- topo id : ", topo_id, " -----")
 
@@ -331,25 +339,6 @@ def large_network_gnn_prediction(num_topo, model):
             else:
                 for flow_path in range(flow_src, flow_dest+1):
                     flow.path.append(flow_path)
-
-        """
-        # Add flow information
-        # There may exist some redundant flows
-        for i in range(num_flow):
-            flow = objs[topo_id].flow.add()
-            flow.id = i
-            flow.rate = random.uniform(0.00001, 0.00005)
-            flow.burst = random.uniform(0.01, 1)
-        
-
-            # I want the foi to cross nearly the whole topology due to the NetCal characteristics
-            if flow.id == foi:
-                flow_src = random.randint(0, 3)
-                flow_dest = num_server-1
-            else:
-                flow_src = random.randint(0, num_server-1)
-                flow_dest = random.randint(flow_src, num_server-1)
-        """
 
         # Create a list to find which flows are on each server
         flows_in_servers_temp = collections.defaultdict(list)
@@ -466,10 +455,12 @@ def large_network_gnn_prediction(num_topo, model):
 if __name__ == "__main__":
 
     p = argparse.ArgumentParser()
-    p.add_argument("num_topo")
-    p.add_argument("model")
+    p.add_argument("topo_id_start")
+    p.add_argument("topo_id_end")
+    p.add_argument("flowBurst")
+    # p.add_argument("model")
     args = p.parse_args()
 
-    model = torch.load(args.model)
-    large_network_random_search(int(args.num_topo))
+    # model = torch.load(args.model)
+    large_network_random_search(int(args.topo_id_start), int(args.topo_id_end), float(args.flowBurst))
     # large_network_gnn_prediction(int(args.num_topo), model)
