@@ -131,7 +131,7 @@ For the storage of analysis, it is highly recommended to create a directory for 
 2. Generate a larger size of dataset. This is mainly because the network size (# servers, # flows) is small in the existing [dataset](https://github.com/fabgeyer/dataset-rtas2021). This will output ```dataset-attack-large.pbz```. Please start up the NetCal.jar beforehand. There is also a ```temp4pred.pbz``` file in this folder, but ignore it. This is just an intermediate .pbz file for the proloned flow PMOO delay bound calculation. When the ```dataset-attack-large.pbz``` is created, please move it to ```Network_Information_and_Analysis/original_topology/before_fp/``` folder.
     ```
     [data/large_network_generation]$ java -jar NetCal.jar
-    [data/large_network_generation]$ python3 -m dataset_network_generation_pbz <# topology> <deepfpPMOO.pt/ggnn_pmoo.pt model path>
+    [data/large_network_generation]$ python3 -m dataset_network_generation_pbz <topo id start> <topo id end> <deepfpPMOO.pt/ggnn_pmoo.pt model path>
     ```
     On IZAR server, run the script
     ```
