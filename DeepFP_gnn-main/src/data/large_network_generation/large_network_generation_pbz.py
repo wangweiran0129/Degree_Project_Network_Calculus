@@ -457,10 +457,9 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("topo_id_start")
     p.add_argument("topo_id_end")
-    p.add_argument("flowBurst")
     # p.add_argument("model")
     args = p.parse_args()
 
     # model = torch.load(args.model)
-    large_network_random_search(int(args.topo_id_start), int(args.topo_id_end), float(args.flowBurst))
+    large_network_random_search(int(args.topo_id_start), int(args.topo_id_end))
     # large_network_gnn_prediction(int(args.num_topo), model)
