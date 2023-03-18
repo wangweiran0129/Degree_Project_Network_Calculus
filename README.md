@@ -86,14 +86,14 @@ For the storage of analysis, it is highly recommended to create a directory for 
 |-- DeepFP_gnn-main
 |-- DNC
 └-- Network_Information_and_Analysis
-    └-- attacked_topology
+    └-- original_topology
     |   |-- after_fp
     |   └-- before_fp
     |       |-- pbz
     |       └-- pickle
     |           |-- graphs
     |           └-- targets
-    |-- original_topology
+    |-- after_topology
     |   |-- after_fp
     |   └-- before_fp
     └-- prediction_value
@@ -185,4 +185,4 @@ For the storage of analysis, it is highly recommended to create a directory for 
 - Special Acknowledgement to:   
     - Bondorf Steffen (Bondorf.Steffen@ruhr-uni-bochum.de) and Alexander Scheffler (Alexander.Scheffler@ruhr-uni-bochum.de) for the support of the usage of NetCal/DNC tool.
     - Etienne Orliac (etienne.orliac@epfl.ch) for the support of the configuration of torch enviroment on EPFL IZAR cluster.
-    - Hadidane Karim (karim.hadidane@epfl.ch) for the support of the implementation of GNN reproduction.
+    - Hadidane Karim (karim.hadidane@epfl.ch) for providing the base code of GNN reproduction.
